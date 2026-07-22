@@ -108,5 +108,6 @@ input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
 @media (max-width: 640px) {
   .nav { padding: 12px 20px; }
   .nav-links { gap: 16px; }
-  .nav-links a:not(.cta) { display: none; } /* keep just the CTA on small screens */
+  /* keep just the CTA (and Dashboard, if signed in) on small screens */
+  .nav-links a:not(.cta):not(#dashLink) { display: none; }
 }
