@@ -17,6 +17,15 @@ body {
 }
 a { color: var(--green); }
 a:hover { color: var(--green-dark); }
+/* Button-like and pill links set their own colors — never let the global
+   a:hover repaint them (cream text turning dark-green vanishes on dark bgs). */
+a.btn-primary:hover { color: var(--cream); }
+a.btn-light:hover { color: var(--green-dark); }
+a.btn-ghost-light:hover { color: var(--cream); background: rgba(250,247,240,0.12); }
+a.btn-outline:hover { color: var(--green); }
+a.sm-btn:hover { color: var(--green); }
+.nav-links a:not(.cta):hover { color: var(--green); }
+.nav-links a.cta:hover { color: var(--cream); }
 ::selection { background: var(--green); color: var(--cream); }
 input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
 

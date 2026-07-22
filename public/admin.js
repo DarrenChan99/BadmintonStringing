@@ -22,10 +22,26 @@ async function api(path, opts) {
   return data;
 }
 
+// dd/mm, with /yy appended when it's not the current year
+function fmtDayMonth(d) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = d.getFullYear() !== new Date().getFullYear() ? '/' + String(d.getFullYear()).slice(-2) : '';
+  return `${dd}/${mm}${yy}`;
+}
+
 function fmtDate(unixSeconds) {
   const d = new Date(unixSeconds * 1000);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
+  return fmtDayMonth(d) + ' ' +
          d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+// "2026-07-25" (from <input type=date>) -> "25/07" (or "25/07/27" if another year)
+function fmtDateNeeded(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  if (!m) return iso; // free-text or empty — leave as-is
+  const yy = Number(m[1]) !== new Date().getFullYear() ? '/' + m[1].slice(-2) : '';
+  return `${m[3]}/${m[2]}${yy}`;
 }
 
 function el(tag, attrs = {}, ...children) {
@@ -117,7 +133,7 @@ function renderOrders() {
         el('div', {}, el('div', { class: 'k' }, 'Racket'), el('div', { class: 'v' }, o.racket_model)),
         el('div', {}, el('div', { class: 'k' }, 'Tension'), el('div', { class: 'v' }, o.tension)),
         el('div', {}, el('div', { class: 'k' }, 'Grip / Wrap'), el('div', { class: 'v' }, gc)),
-        el('div', {}, el('div', { class: 'k' }, 'Needed by'), el('div', { class: 'v' }, o.date_needed || 'not specified'))),
+        el('div', {}, el('div', { class: 'k' }, 'Needed by'), el('div', { class: 'v' }, o.date_needed ? fmtDateNeeded(o.date_needed) : 'not specified'))),
       o.dropoff ? el('div', { class: 'o-note' }, el('strong', {}, 'Drop-off: '), o.dropoff) : null,
       o.special_requests ? el('div', { class: 'o-note' }, el('strong', {}, 'Notes: '), o.special_requests) : null,
       el('div', { class: 'o-actions' },

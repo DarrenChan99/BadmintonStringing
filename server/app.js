@@ -152,13 +152,24 @@ app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
   const { rows } = await q('SELECT * FROM orders ORDER BY created_at DESC');
   const header = ['Name','Contact','Racket','Tension','String','Grip','Cushion','Total','Status','Dropoff','Needed by','Notes','Submitted'];
   const esc = (c) => '"' + String(c ?? '').replace(/"/g, '""') + '"';
+  const pad = (n) => String(n).padStart(2, '0');
+  // dd/mm/yy — always include the year in exports so old spreadsheets stay unambiguous
+  const fmtStamp = (unixSeconds) => {
+    const d = new Date(Number(unixSeconds) * 1000);
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  // "2026-07-25" -> "25/07/26"; free text passes through untouched
+  const fmtNeeded = (v) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+    return m ? `${m[3]}/${m[2]}/${m[1].slice(-2)}` : v;
+  };
   const lines = [header.map(esc).join(',')];
   for (const o of rows) {
     lines.push([
       o.name, o.contact, o.racket_model, o.tension,
       o.providing_string === 'yes' ? 'customer' : 'ours',
-      o.grip, o.cushion, o.total, o.status, o.dropoff, o.date_needed,
-      o.special_requests, new Date(Number(o.created_at) * 1000).toISOString()
+      o.grip, o.cushion, o.total, o.status, o.dropoff, fmtNeeded(o.date_needed),
+      o.special_requests, fmtStamp(o.created_at)
     ].map(esc).join(','));
   }
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
