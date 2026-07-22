@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders — Admin</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A4B29">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .page { max-width:1180px; margin:0 auto; padding:40px 32px 96px; }
+  .page-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+  h1 { font-family:'Oswald',sans-serif; font-weight:700; font-size:clamp(26px,3vw,36px); margin:0; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; }
+  .sm-btn { font-size:13px; font-weight:600; padding:9px 16px; border-radius:999px; cursor:pointer; font-family:inherit; }
+  .info { background:rgba(15,107,58,0.06); border:1px solid rgba(15,107,58,0.18); border-radius:12px; padding:16px 20px; margin-bottom:28px; font-size:14px; line-height:1.6; color:rgba(26,31,27,0.75); }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:32px; }
+  .stat { border-radius:14px; padding:18px 20px; background:#fff; border:1px solid rgba(15,107,58,0.16); }
+  .stat .label { font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,31,27,0.5); margin-bottom:6px; }
+  .stat .value { font-family:'Oswald',sans-serif; font-weight:700; font-size:26px; color:var(--green); }
+  .filter-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+  .filter-bar input { margin-left:auto; padding:9px 16px; border-radius:999px; border:1.5px solid rgba(15,107,58,0.25); font-size:13px; font-family:inherit; background:#fff; min-width:220px; }
+  .fchip { font-size:13px; font-weight:600; padding:8px 14px; border-radius:999px; cursor:pointer; border:1.5px solid rgba(15,107,58,0.2); background:#fff; user-select:none; }
+  .fchip.active { border-color:var(--green); background:var(--green); color:var(--cream); }
+  .orders { display:flex; flex-direction:column; gap:14px; }
+  .order { border-radius:14px; padding:22px 24px; background:#fff; border:1px solid rgba(15,107,58,0.14); }
+  .order.ready { border:1.5px solid var(--green); }
+  .order.completed { background:rgba(26,31,27,0.03); }
+  .o-head { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+  .o-name { font-family:'Oswald',sans-serif; font-weight:600; font-size:17px; }
+  .status-pill { font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
+  .o-total { font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--green); }
+  .o-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:16px; }
+  .o-grid .k { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,31,27,0.45); margin-bottom:4px; }
+  .o-grid .v { font-size:14px; font-weight:600; }
+  .o-note { font-size:13px; color:rgba(26,31,27,0.65); margin-bottom:10px; }
+  .o-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid rgba(15,107,58,0.12); }
+  .schip { font-size:13px; font-weight:600; padding:8px 14px; border-radius:999px; cursor:pointer; border:1.5px solid rgba(15,107,58,0.2); background:#fff; user-select:none; }
+  .schip.active { color:var(--cream); }
+  .del-btn { margin-left:auto; font-size:13px; font-weight:600; color:#8a2020; padding:8px 14px; border-radius:999px; border:1px solid rgba(178,34,34,0.25); background:none; cursor:pointer; font-family:inherit; }
+  .empty { text-align:center; padding:80px 32px; border:1.5px dashed rgba(15,107,58,0.3); border-radius:16px; }
+  /* users section */
+  .users-card { margin-top:48px; background:#fff; border:1px solid rgba(15,107,58,0.16); border-radius:16px; padding:28px; }
+  .users-card h2 { font-family:'Oswald',sans-serif; font-weight:600; font-size:20px; margin:0 0 6px; }
+  .user-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid rgba(15,107,58,0.1); flex-wrap:wrap; }
+  .add-user-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:20px; align-items:end; }
+  .add-user-form input { padding:11px 14px; border-radius:10px; border:1.5px solid rgba(15,107,58,0.3); font-size:14px; font-family:inherit; background:var(--cream); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <svg width="36" height="36" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#0A4B29"/><path d="M9 21 C9 13 12.5 9 17 9 C21.5 9 25 13 25 21 Z" fill="#FAF7F0"/><rect x="8" y="20" width="18" height="3" rx="1.5" fill="#0A4B29"/><path d="M9 15 C4 13 2 8 3 4 C7 5 10 9 10.5 14 Z" fill="#FAF7F0"/><path d="M25 15 C30 13 32 8 31 4 C27 5 24 9 23.5 14 Z" fill="#FAF7F0"/></svg>
+    <span class="brand-text"><span class="brand-top">PALO ALTO</span><span class="brand-sub">BADMINTON STRINGING</span></span>
+  </a>
+  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <span class="badge" style="color:var(--green);background:rgba(15,107,58,0.1);">Admin</span>
+    <span id="whoami" style="font-size:13px;color:rgba(26,31,27,0.6);"></span>
+    <a href="/" style="font-size:14px;font-weight:600;color:var(--green);text-decoration:none;">← Back to site</a>
+    <button class="sm-btn" id="logoutBtn" style="color:#8a2020;background:none;border:1px solid rgba(178,34,34,0.25);">Sign out</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-head">
+    <h1>Orders</h1>
+    <div class="toolbar">
+      <a class="sm-btn" href="/api/admin/orders.csv" style="color:var(--green);background:rgba(15,107,58,0.08);border:1px solid rgba(15,107,58,0.25);text-decoration:none;">Download as spreadsheet</a>
+    </div>
+  </div>
+
+  <div class="info">
+    This page shows every racket submitted through the booking form. Use the buttons on each order to mark it
+    <strong>Pending → In progress → Ready → Completed</strong> as you work on it. Use the search box or status tabs below
+    to find an order quickly.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="filter-bar">
+    <div class="fchip active" data-filter="all">All</div>
+    <div class="fchip" data-filter="pending">Pending</div>
+    <div class="fchip" data-filter="in_progress">In progress</div>
+    <div class="fchip" data-filter="ready">Ready</div>
+    <div class="fchip" data-filter="completed">Completed</div>
+    <input type="text" id="search" placeholder="Search name, racket, contact...">
+  </div>
+
+  <div class="orders" id="orders"></div>
+  <div class="empty hidden" id="empty">
+    <p style="font-size:15px;color:rgba(26,31,27,0.55);margin:0;">No orders match. Submissions from the booking form show up here automatically.</p>
+  </div>
+
+  <!-- owner only -->
+  <div class="users-card hidden" id="usersCard">
+    <h2>Admin users</h2>
+    <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:0 0 8px;">People who can sign in to this panel. Only the owner can add or remove admins.</p>
+    <div class="error-box hidden" id="userError" style="margin:12px 0;"></div>
+    <div id="userList"></div>
+    <form class="add-user-form" id="addUserForm">
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Name</label><input type="text" id="nuName" required maxlength="120"></div>
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Email</label><input type="email" id="nuEmail" required maxlength="200"></div>
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Password (min 10 chars)</label><input type="password" id="nuPassword" required minlength="10" autocomplete="new-password"></div>
+      <button type="submit" class="sm-btn" style="color:var(--cream);background:var(--green);border:none;height:42px;">Add admin</button>
+    </form>
+  </div>
+</div>
+
+<script src="/admin.js"></script>
+</body>
+</html>

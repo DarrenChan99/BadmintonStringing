@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book a Restring — Palo Alto Badminton Stringing</title>
+<meta name="description" content="Book a badminton restring: pick your tension, grip, and cushion wrap, and see the price instantly.">
+<meta name="theme-color" content="#0A4B29">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .page { max-width:1180px; margin:0 auto; padding:56px 32px 96px; }
+  .intro { max-width:680px; margin-bottom:40px; }
+  .kicker { font-size:13px; font-weight:600; letter-spacing:0.12em; color:var(--green); text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-family:'Oswald',sans-serif; font-weight:700; font-size:clamp(28px,4vw,42px); margin:0 0 14px; }
+  .intro p { font-size:15px; line-height:1.6; color:rgba(26,31,27,0.65); margin:0; }
+  .layout { display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; }
+  .form-col { flex:2 1 480px; }
+  .summary-col { flex:1 1 280px; position:sticky; top:90px; }
+  .summary { background:var(--green-dark); border-radius:16px; padding:28px; color:var(--cream); }
+  .summary .title { font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; letter-spacing:0.02em; margin-bottom:20px; }
+  .summary .row { display:flex; justify-content:space-between; font-size:14px; padding:8px 0; border-bottom:1px solid rgba(250,247,240,0.15); }
+  .summary .row span:first-child { opacity:0.75; }
+  .summary .total-row { display:flex; justify-content:space-between; align-items:baseline; padding-top:16px; }
+  .summary .total { font-family:'Oswald',sans-serif; font-weight:700; font-size:28px; }
+  .success { max-width:640px; margin:0 auto; padding:120px 32px; text-align:center; }
+  .receipt { background:var(--cream); border:1.5px solid var(--green); border-radius:16px; padding:28px; text-align:left; margin-bottom:28px; }
+  .receipt .row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(15,107,58,0.1); }
+  .receipt .row:last-child { border-bottom:none; }
+  .receipt .row span:first-child { color:rgba(26,31,27,0.55); font-size:14px; }
+  .receipt .row span:last-child { font-weight:600; font-size:14px; }
+  /* honeypot */
+  .hp { position:absolute; left:-9999px; top:-9999px; height:1px; width:1px; overflow:hidden; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <svg width="36" height="36" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#0A4B29"/><path d="M9 21 C9 13 12.5 9 17 9 C21.5 9 25 13 25 21 Z" fill="#FAF7F0"/><rect x="8" y="20" width="18" height="3" rx="1.5" fill="#0A4B29"/><path d="M9 15 C4 13 2 8 3 4 C7 5 10 9 10.5 14 Z" fill="#FAF7F0"/><path d="M25 15 C30 13 32 8 31 4 C27 5 24 9 23.5 14 Z" fill="#FAF7F0"/></svg>
+    <span class="brand-text"><span class="brand-top">PALO ALTO</span><span class="brand-sub">BADMINTON STRINGING</span></span>
+  </a>
+  <a href="/" style="font-size:14px;font-weight:600;color:var(--green);text-decoration:none;">← Back to pricing</a>
+</nav>
+
+<!-- success view -->
+<div id="successView" class="success hidden">
+  <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:24px;"><circle cx="28" cy="28" r="28" fill="#0F6B3A"/><path d="M16 29l8 8 16-18" fill="none" stroke="#FAF7F0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <h1 id="successHeading">Got it!</h1>
+  <p style="font-size:15px;line-height:1.6;color:rgba(26,31,27,0.65);margin:0 0 32px;">We've received your racket details. One last step — please DM us on Instagram to confirm your drop-off.</p>
+  <div class="receipt">
+    <div class="row"><span>Racket</span><span id="rRacket"></span></div>
+    <div class="row"><span>Tension</span><span id="rTension"></span></div>
+    <div class="row"><span>Estimated total</span><span id="rTotal" style="font-weight:700;font-size:16px;color:var(--green);"></span></div>
+  </div>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+    <a class="btn btn-primary" href="https://instagram.com/palybadmintonstringing" target="_blank" rel="noopener">DM @palybadmintonstringing</a>
+    <button class="btn btn-outline" id="resetBtn">Submit another racket</button>
+  </div>
+</div>
+
+<!-- form view -->
+<div id="formView" class="page">
+  <div class="intro">
+    <div class="kicker">Book a restring</div>
+    <h1>Tell us about your racket</h1>
+    <p>Restringing more than one racket? Submit this form once per racket, then DM us on Instagram to confirm. Cash preferred at drop-off.</p>
+  </div>
+
+  <div class="layout">
+    <form class="form-col" id="orderForm" novalidate>
+      <div class="error-box hidden" id="errorBox"></div>
+
+      <div class="field">
+        <label for="name">First and last name *</label>
+        <input type="text" id="name" name="name" placeholder="Jane Doe" autocomplete="name" maxlength="120">
+      </div>
+
+      <div class="field">
+        <label for="contact">Contact info (phone, Instagram, or email) *</label>
+        <input type="text" id="contact" name="contact" placeholder="@handle, phone, or email" maxlength="200">
+      </div>
+
+      <div class="field">
+        <label for="racketModel">Racket model *</label>
+        <input type="text" id="racketModel" name="racketModel" placeholder="ex: Astrox 88D Pro, Nanoflare 1000Z" maxlength="200">
+      </div>
+
+      <!-- honeypot: humans never see or fill this -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label>Are you providing string? *</label>
+        <div class="chips" data-group="providingString">
+          <div class="chip" data-value="yes">Yes — $15</div>
+          <div class="chip" data-value="no">No — $25</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tension *</label>
+        <div class="chips" data-group="tension" style="margin-bottom:12px;">
+          <div class="chip" data-value="24">24 lb</div>
+          <div class="chip" data-value="25">25 lb</div>
+          <div class="chip" data-value="26">26 lb</div>
+          <div class="chip" data-value="27">27 lb</div>
+          <div class="chip" data-value="28">28 lb</div>
+          <div class="chip" data-value="other">Other</div>
+        </div>
+        <input type="text" id="tensionOther" class="hidden" placeholder="ex: 26x24, or 27lb full bed" maxlength="60">
+      </div>
+
+      <div class="field">
+        <label>Grip</label>
+        <div class="chips" data-group="grip">
+          <div class="chip active" data-value="none">None</div>
+          <div class="chip" data-value="we">We provide (+$2)</div>
+          <div class="chip" data-value="own">Customer provided</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cushion wrap</label>
+        <div class="chips" data-group="cushion">
+          <div class="chip active" data-value="none">None</div>
+          <div class="chip" data-value="we">We provide (+$3)</div>
+          <div class="chip" data-value="own">Customer provided</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="dropoff">Planned drop-off date <span class="hint">(skip if we already have your racket)</span></label>
+        <input type="text" id="dropoff" placeholder="ex: 04/06 4:20pm at big gym" maxlength="300">
+      </div>
+
+      <div class="field">
+        <label for="dateNeeded">Date needed back by</label>
+        <input type="date" id="dateNeeded">
+        <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:8px 0 0;">Turnaround is typically 1–2 business days after drop-off. We'll notify you of any delays, or if it's strung early.</p>
+      </div>
+
+      <div class="field">
+        <label for="specialRequests">Special requests</label>
+        <textarea id="specialRequests" rows="4" maxlength="1000" placeholder="ex: prestretch, undergrip removed, Yonex stencil, cushion wrap thickness"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn" style="margin-top:8px;">Submit racket</button>
+    </form>
+
+    <div class="summary-col">
+      <div class="summary">
+        <div class="title">Order summary</div>
+        <div class="row"><span>Stringing</span><span id="sString">—</span></div>
+        <div class="row"><span>Grip</span><span id="sGrip">—</span></div>
+        <div class="row"><span>Cushion wrap</span><span id="sCushion">—</span></div>
+        <div class="total-row"><span style="font-size:14px;opacity:0.8;">Estimated total</span><span class="total" id="sTotal">$0</span></div>
+        <p style="font-size:12px;line-height:1.5;opacity:0.7;margin:16px 0 0;">Cash preferred at drop-off. DM @palybadmintonstringing for other payment methods.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/order.js"></script>
+</body>
+</html>
