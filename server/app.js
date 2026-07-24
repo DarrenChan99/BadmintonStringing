@@ -98,20 +98,20 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
 
 // ---------- auth API ----------
 app.post('/api/auth/login', loginLimiter, wrap(async (req, res) => {
-  const email = str(req.body?.email, 200).toLowerCase();
+  const username = str(req.body?.username, 200).toLowerCase();
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
-  const { rows } = email
-    ? await q('SELECT * FROM users WHERE LOWER(email) = $1', [email])
+  const { rows } = username
+    ? await q('SELECT * FROM users WHERE LOWER(username) = $1', [username])
     : { rows: [] };
   const user = rows[0];
 
   if (!user || !verifyPassword(password, user.password_hash)) {
-    return res.status(401).json({ error: 'Invalid email or password.' });
+    return res.status(401).json({ error: 'Invalid username or password.' });
   }
 
   const session = await createSession(user.id);
   res.setHeader('Set-Cookie', sessionCookieHeader(session.id, 60 * 60 * 24 * 7, IS_PROD));
-  res.json({ ok: true, user: { email: user.email, name: user.name, role: user.role } });
+  res.json({ ok: true, user: { username: user.username, name: user.name, role: user.role } });
 }));
 
 app.post('/api/auth/logout', wrap(async (req, res) => {
@@ -122,7 +122,7 @@ app.post('/api/auth/logout', wrap(async (req, res) => {
 
 app.get('/api/auth/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not signed in' });
-  res.json({ user: { id: req.user.id, email: req.user.email, name: req.user.name, role: req.user.role } });
+  res.json({ user: { id: req.user.id, username: req.user.username, name: req.user.name, role: req.user.role } });
 });
 
 // ---------- admin API (orders) ----------
@@ -179,25 +179,27 @@ app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
 
 // ---------- admin API (user management, owner only) ----------
 app.get('/api/admin/users', requireOwner, wrap(async (_req, res) => {
-  const { rows } = await q('SELECT id, email, name, role, created_at FROM users ORDER BY created_at');
+  const { rows } = await q('SELECT id, username, name, role, created_at FROM users ORDER BY created_at');
   res.json({ users: rows });
 }));
 
 app.post('/api/admin/users', requireOwner, wrap(async (req, res) => {
-  const email = str(req.body?.email, 200).toLowerCase();
+  const username = str(req.body?.username, 200).toLowerCase();
   const name = str(req.body?.name, 120);
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email.' });
+  if (!/^[a-z0-9._@-]{3,}$/.test(username)) {
+    return res.status(400).json({ error: 'Username must be at least 3 characters: letters, numbers, . _ - @ only.' });
+  }
   if (!name) return res.status(400).json({ error: 'Enter a name.' });
   if (password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
   try {
     const { rows } = await q(
-      'INSERT INTO users (email, name, password_hash, role) VALUES ($1,$2,$3,$4) RETURNING id',
-      [email, name, hashPassword(password), 'admin']
+      'INSERT INTO users (username, name, password_hash, role) VALUES ($1,$2,$3,$4) RETURNING id',
+      [username, name, hashPassword(password), 'admin']
     );
     res.status(201).json({ ok: true, id: rows[0].id });
   } catch (e) {
-    if (e?.code === '23505') return res.status(409).json({ error: 'That email already has an account.' });
+    if (e?.code === '23505') return res.status(409).json({ error: 'That username is already taken.' });
     throw e;
   }
 }));

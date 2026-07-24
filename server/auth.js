@@ -27,7 +27,7 @@ export async function destroySession(id) {
 export async function getSessionUser(sessionId) {
   if (!sessionId || typeof sessionId !== 'string' || sessionId.length !== 64) return null;
   const { rows } = await q(`
-    SELECT u.id, u.email, u.name, u.role
+    SELECT u.id, u.username, u.name, u.role
     FROM sessions s JOIN users u ON u.id = s.user_id
     WHERE s.id = $1 AND s.expires_at > EXTRACT(EPOCH FROM NOW())
   `, [sessionId]);

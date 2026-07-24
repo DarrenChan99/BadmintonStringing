@@ -15,7 +15,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: document.getElementById('email').value.trim(),
+        username: document.getElementById('username').value.trim(),
         password: document.getElementById('password').value
       })
     });

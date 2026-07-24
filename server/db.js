@@ -33,7 +33,7 @@ export function migrate() {
     migrated = pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        email TEXT NOT NULL UNIQUE,
+        username TEXT NOT NULL UNIQUE,
         name TEXT NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('owner','admin')),
@@ -66,7 +66,12 @@ export function migrate() {
 
       CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
       CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-    `);
+    `).then(() =>
+      // Migrate databases created before the email -> username rename.
+      // 42703 = no such column, i.e. already migrated or freshly created.
+      pool.query('ALTER TABLE users RENAME COLUMN email TO username')
+        .catch((e) => { if (e?.code !== '42703') throw e; })
+    );
   }
   return migrated;
 }

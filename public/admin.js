@@ -153,12 +153,12 @@ async function loadUsers() {
     const row = el('div', { class: 'user-row' },
       el('div', {},
         el('span', { style: 'font-weight:600;font-size:14px;' }, u.name + ' '),
-        el('span', { style: 'font-size:13px;color:rgba(26,31,27,0.55);' }, u.email),
+        el('span', { style: 'font-size:13px;color:rgba(26,31,27,0.55);' }, u.username),
         u.role === 'owner' ? el('span', { class: 'badge', style: 'margin-left:10px;font-size:10px;padding:3px 10px;' }, 'Owner') : null));
     if (u.role !== 'owner' && u.id !== me.id) {
       const btn = el('button', { class: 'del-btn', style: 'margin-left:0;' }, 'Remove');
       btn.addEventListener('click', async () => {
-        if (!confirm(`Remove admin access for ${u.email}?`)) return;
+        if (!confirm(`Remove admin access for ${u.username}?`)) return;
         try { await api(`/api/admin/users/${u.id}`, { method: 'DELETE' }); loadUsers(); }
         catch (e) { showUserError(e.message); }
       });
@@ -183,7 +183,7 @@ $('addUserForm').addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: $('nuName').value.trim(),
-        email: $('nuEmail').value.trim(),
+        username: $('nuUsername').value.trim(),
         password: $('nuPassword').value
       })
     });
