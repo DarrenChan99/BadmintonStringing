@@ -32,6 +32,20 @@
   .receipt .row span:last-child { font-weight:600; font-size:14px; }
   /* honeypot */
   .hp { position:absolute; left:-9999px; top:-9999px; height:1px; width:1px; overflow:hidden; }
+  /* string stock chips + info tooltip */
+  .string-chip { position:relative; display:inline-flex; align-items:center; gap:6px;
+    padding:7px 12px; border-radius:999px; font-size:13px; font-weight:600;
+    background:var(--green-50); border:1px solid var(--green-200); color:var(--ink); }
+  .string-info { width:16px; height:16px; border-radius:50%; background:var(--green-200); color:var(--green-dark);
+    font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer; user-select:none; flex-shrink:0; }
+  .string-chip:hover .string-info, .string-info.open { background:var(--green); color:var(--cream); }
+  .string-tooltip { position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%);
+    background:var(--green-dark); color:var(--cream); font-size:12.5px; font-weight:400; line-height:1.5;
+    padding:10px 14px; border-radius:10px; width:max-content; max-width:240px; text-align:left;
+    box-shadow:0 8px 20px rgba(10,75,41,0.25); pointer-events:none; z-index:5; }
+  .string-tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:6px solid transparent; border-top-color:var(--green-dark); }
 </style>
 </head>
 <body>
@@ -102,7 +116,10 @@
           <div class="chip" data-value="yes">Yes, $15</div>
           <div class="chip" data-value="no">No, $25</div>
         </div>
-        <p id="stockNote" class="hint" style="font-size:13px;margin-top:8px;"></p>
+        <div id="stockNote" class="hidden" style="margin-top:12px;">
+          <p class="hint" style="font-size:13px;margin:0 0 8px;">In stock if we provide the string:</p>
+          <div id="stockChips" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
       </div>
 
       <div class="field">

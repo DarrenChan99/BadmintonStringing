@@ -67,9 +67,12 @@ export function migrate() {
       CREATE TABLE IF NOT EXISTS string_stock (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
+        description TEXT NOT NULL DEFAULT '',
         in_stock BOOLEAN NOT NULL DEFAULT TRUE,
         created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT
       );
+
+      ALTER TABLE string_stock ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
 
       CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
       CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);

@@ -105,12 +105,34 @@
 
   <div class="users-card" id="stockCard">
     <h2>String stock</h2>
-    <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:0 0 8px;">Strings shown to customers on the booking page as available when we provide the string.</p>
+    <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:0 0 8px;">Strings customers can see when they choose "No, we provide the string." Add an optional description, it shows as an info note on the booking page.</p>
     <div class="error-box hidden" id="stockError" style="margin:12px 0;"></div>
-    <div id="stockList"></div>
-    <form class="add-user-form" id="addStockForm" style="grid-template-columns:1fr auto;">
-      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">String name</label><input type="text" id="stockName" required maxlength="100" placeholder="ex: Yonex BG65"></div>
-      <button type="submit" class="sm-btn" style="color:var(--cream);background:var(--green);border:none;height:42px;">Add string</button>
+
+    <div style="margin-bottom:20px;">
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Select a string to edit</label>
+      <select id="stockSelect" style="padding:11px 14px;border-radius:10px;border:1.5px solid rgba(15,107,58,0.3);font-size:14px;font-family:inherit;background:var(--cream);width:100%;max-width:360px;">
+        <option value="new">+ New string</option>
+      </select>
+    </div>
+
+    <form id="stockForm">
+      <div class="add-user-form" style="grid-template-columns:1fr 1fr;">
+        <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Name</label><input type="text" id="stockName" required maxlength="100" placeholder="ex: Yonex BG65"></div>
+        <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Stock status</label>
+          <select id="stockInStock" style="padding:11px 14px;border-radius:10px;border:1.5px solid rgba(15,107,58,0.3);font-size:14px;font-family:inherit;background:var(--cream);width:100%;">
+            <option value="true">In stock</option>
+            <option value="false">Out of stock</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Description <span style="font-weight:400;color:rgba(26,31,27,0.5);">(shown to customers via an info icon)</span></label>
+        <textarea id="stockDescription" rows="2" maxlength="300" placeholder="ex: 0.70mm string, great durability and medium repulsion" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(15,107,58,0.3);font-size:14px;font-family:inherit;background:var(--cream);resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="submit" class="sm-btn" id="stockSaveBtn" style="color:var(--cream);background:var(--green);border:none;">Add string</button>
+        <button type="button" class="del-btn hidden" id="stockDeleteBtn" style="margin-left:0;">Remove this string</button>
+      </div>
     </form>
   </div>
 
@@ -129,6 +151,7 @@
   </div>
 </div>
 
+<script src="/vendor/gsap.min.js"></script>
 <script src="/admin.js"></script>
 </body>
 </html>

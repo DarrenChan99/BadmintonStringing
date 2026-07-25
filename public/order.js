@@ -15,6 +15,7 @@ document.querySelectorAll('.chips[data-group]').forEach((group) => {
     if (key === 'tension') {
       $('tensionOther').classList.toggle('hidden', state.tension !== 'other');
     }
+    if (key === 'providingString') updateStockNote();
     updateSummary();
   });
 });
@@ -116,8 +117,70 @@ $('resetBtn').addEventListener('click', () => {
 
 updateSummary();
 
+// ----- string stock note -----
+let stockStrings = [];
+let openTooltip = null;
+
+function closeTooltip() {
+  if (!openTooltip) return;
+  const { icon, tip } = openTooltip;
+  icon.classList.remove('open');
+  if (window.gsap) {
+    gsap.to(tip, { opacity: 0, y: 4, duration: 0.12, onComplete: () => tip.remove() });
+  } else {
+    tip.remove();
+  }
+  openTooltip = null;
+}
+
+function openTooltipFor(icon, text) {
+  if (openTooltip?.icon === icon) { closeTooltip(); return; }
+  closeTooltip();
+  const tip = document.createElement('div');
+  tip.className = 'string-tooltip';
+  tip.textContent = text;
+  icon.parentElement.appendChild(tip);
+  icon.classList.add('open');
+  openTooltip = { icon, tip };
+  if (window.gsap) gsap.from(tip, { opacity: 0, y: 4, duration: 0.16, ease: 'power2.out' });
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.string-info')) closeTooltip();
+});
+
+function renderStockChips() {
+  const wrap = $('stockChips');
+  wrap.replaceChildren(...stockStrings.map((s) => {
+    const chip = document.createElement('span');
+    chip.className = 'string-chip';
+    chip.append(s.name);
+    if (s.description) {
+      const icon = document.createElement('span');
+      icon.className = 'string-info';
+      icon.textContent = 'i';
+      icon.setAttribute('role', 'button');
+      icon.setAttribute('tabindex', '0');
+      icon.setAttribute('aria-label', `About ${s.name}`);
+      icon.addEventListener('click', (e) => { e.stopPropagation(); openTooltipFor(icon, s.description); });
+      icon.addEventListener('mouseenter', () => openTooltipFor(icon, s.description));
+      icon.addEventListener('mouseleave', () => closeTooltip());
+      icon.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTooltipFor(icon, s.description); }
+      });
+      chip.append(icon);
+    }
+    return chip;
+  }));
+}
+
+function updateStockNote() {
+  const show = state.providingString === 'no' && stockStrings.length > 0;
+  $('stockNote').classList.toggle('hidden', !show);
+}
+
 fetch('/api/string-stock').then((r) => r.json()).then(({ strings }) => {
-  $('stockNote').textContent = strings?.length
-    ? `In stock if we provide the string: ${strings.join(', ')}.`
-    : '';
+  stockStrings = strings || [];
+  renderStockChips();
+  updateStockNote();
 }).catch(() => {});

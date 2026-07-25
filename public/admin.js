@@ -195,6 +195,8 @@ $('addUserForm').addEventListener('submit', async (e) => {
 });
 
 // ----- string stock -----
+let stockStrings = [];
+
 function showStockError(msg) {
   const box = $('stockError');
   box.textContent = msg;
@@ -202,68 +204,74 @@ function showStockError(msg) {
   setTimeout(() => box.classList.add('hidden'), 5000);
 }
 
-async function patchStock(id, body) {
-  try {
-    await api(`/api/admin/string-stock/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    return true;
-  } catch (err) {
-    showStockError(err.message);
-    return false;
-  }
+function fillStockForm(s) {
+  $('stockName').value = s ? s.name : '';
+  $('stockDescription').value = s ? s.description : '';
+  $('stockInStock').value = s ? String(s.in_stock) : 'true';
+  $('stockSaveBtn').textContent = s ? 'Save changes' : 'Add string';
+  $('stockDeleteBtn').classList.toggle('hidden', !s);
+  if (window.gsap) gsap.from('#stockForm', { opacity: 0.4, duration: 0.2, ease: 'power1.out' });
 }
 
 async function loadStock() {
   const { strings } = await api('/api/admin/string-stock');
-  const list = $('stockList');
-  list.replaceChildren(...strings.map((s) => {
-    const nameInput = el('input', {
-      type: 'text', value: s.name, maxlength: '100',
-      style: 'font-weight:600;font-size:14px;border:1.5px solid transparent;border-radius:8px;padding:6px 8px;background:transparent;font-family:inherit;width:220px;'
-    });
-    nameInput.addEventListener('focus', () => { nameInput.style.borderColor = 'rgba(15,107,58,0.3)'; nameInput.style.background = '#fff'; });
-    const save = async () => {
-      const name = nameInput.value.trim();
-      nameInput.style.borderColor = 'transparent';
-      nameInput.style.background = 'transparent';
-      if (!name || name === s.name) { nameInput.value = s.name; return; }
-      if (await patchStock(s.id, { name })) { s.name = name; } else { nameInput.value = s.name; }
-    };
-    nameInput.addEventListener('blur', save);
-    nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') nameInput.blur(); });
-
-    const toggle = el('div', {
-      class: 'schip' + (s.in_stock ? ' active' : ''),
-      style: s.in_stock ? 'background:#0F6B3A;border-color:#0F6B3A;' : ''
-    }, s.in_stock ? 'In stock' : 'Out of stock');
-    toggle.addEventListener('click', async () => {
-      if (await patchStock(s.id, { inStock: !s.in_stock })) { s.in_stock = !s.in_stock; loadStock(); }
-    });
-    const delBtn = el('button', { class: 'del-btn', style: 'margin-left:0;' }, 'Remove');
-    delBtn.addEventListener('click', async () => {
-      if (!confirm(`Remove ${s.name} from the list?`)) return;
-      await api(`/api/admin/string-stock/${s.id}`, { method: 'DELETE' });
-      loadStock();
-    });
-    return el('div', { class: 'user-row' },
-      nameInput,
-      el('div', { style: 'display:flex;gap:8px;align-items:center;' }, toggle, delBtn));
-  }));
+  stockStrings = strings;
+  const select = $('stockSelect');
+  const prev = select.value;
+  select.replaceChildren(
+    el('option', { value: 'new' }, '+ New string'),
+    ...strings.map((s) => el('option', { value: String(s.id) }, s.name + (s.in_stock ? '' : ' (out of stock)')))
+  );
+  select.value = strings.some((s) => String(s.id) === prev) ? prev : 'new';
+  fillStockForm(strings.find((s) => String(s.id) === select.value));
 }
 
-$('addStockForm').addEventListener('submit', async (e) => {
+$('stockSelect').addEventListener('change', () => {
+  const s = stockStrings.find((s) => String(s.id) === $('stockSelect').value);
+  fillStockForm(s);
+});
+
+$('stockForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const id = $('stockSelect').value;
+  const body = {
+    name: $('stockName').value.trim(),
+    description: $('stockDescription').value.trim(),
+    inStock: $('stockInStock').value === 'true'
+  };
+  if (!body.name) return showStockError('Enter a string name.');
   try {
-    await api('/api/admin/string-stock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: $('stockName').value.trim() })
-    });
-    $('addStockForm').reset();
-    loadStock();
+    if (id === 'new') {
+      const { string } = await api('/api/admin/string-stock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      await loadStock();
+      $('stockSelect').value = String(string.id);
+      fillStockForm(stockStrings.find((s) => s.id === string.id));
+    } else {
+      await api(`/api/admin/string-stock/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      await loadStock();
+      $('stockSelect').value = id;
+      fillStockForm(stockStrings.find((s) => String(s.id) === id));
+    }
+  } catch (err) {
+    showStockError(err.message);
+  }
+});
+
+$('stockDeleteBtn').addEventListener('click', async () => {
+  const id = $('stockSelect').value;
+  const s = stockStrings.find((s) => String(s.id) === id);
+  if (!s || !confirm(`Remove ${s.name} from the list?`)) return;
+  try {
+    await api(`/api/admin/string-stock/${id}`, { method: 'DELETE' });
+    await loadStock();
   } catch (err) {
     showStockError(err.message);
   }

@@ -97,8 +97,8 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
 }));
 
 app.get('/api/string-stock', wrap(async (_req, res) => {
-  const { rows } = await q('SELECT name FROM string_stock WHERE in_stock = TRUE ORDER BY name');
-  res.json({ strings: rows.map((r) => r.name) });
+  const { rows } = await q('SELECT name, description FROM string_stock WHERE in_stock = TRUE ORDER BY name');
+  res.json({ strings: rows });
 }));
 
 // ---------- auth API ----------
@@ -190,9 +190,13 @@ app.get('/api/admin/string-stock', requireAuth, wrap(async (_req, res) => {
 
 app.post('/api/admin/string-stock', requireAuth, wrap(async (req, res) => {
   const name = str(req.body?.name, 100);
+  const description = str(req.body?.description, 300);
   if (!name) return res.status(400).json({ error: 'Enter a string name.' });
   try {
-    const { rows } = await q('INSERT INTO string_stock (name) VALUES ($1) RETURNING *', [name]);
+    const { rows } = await q(
+      'INSERT INTO string_stock (name, description) VALUES ($1,$2) RETURNING *',
+      [name, description]
+    );
     res.status(201).json({ ok: true, string: rows[0] });
   } catch (e) {
     if (e?.code === '23505') return res.status(409).json({ error: 'That string is already on the list.' });
@@ -215,6 +219,10 @@ app.patch('/api/admin/string-stock/:id', requireAuth, wrap(async (req, res) => {
     if (!name) return res.status(400).json({ error: 'Enter a string name.' });
     params.push(name);
     sets.push(`name = $${params.length}`);
+  }
+  if (typeof req.body?.description === 'string') {
+    params.push(str(req.body.description, 300));
+    sets.push(`description = $${params.length}`);
   }
   if (!sets.length) return res.status(400).json({ error: 'Invalid request' });
 
