@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Book a Restring — Palo Alto Badminton Stringing</title>
+<title>Book a Restring - Palo Alto Badminton Stringing</title>
 <meta name="description" content="Book a badminton restring: pick your tension, grip, and cushion wrap, and see the price instantly.">
 <link rel="canonical" href="https://palybadmintonstringing.com/order">
 <meta name="theme-color" content="#0A4B29">
@@ -51,7 +51,7 @@
 <div id="successView" class="success hidden">
   <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:24px;"><circle cx="28" cy="28" r="28" fill="#0F6B3A"/><path d="M16 29l8 8 16-18" fill="none" stroke="#FAF7F0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
   <h1 id="successHeading">Got it!</h1>
-  <p style="font-size:15px;line-height:1.6;color:rgba(26,31,27,0.65);margin:0 0 32px;">We've received your racket details. One last step — please DM us on Instagram to confirm your drop-off.</p>
+  <p style="font-size:15px;line-height:1.6;color:rgba(26,31,27,0.65);margin:0 0 32px;">We've received your racket details. One last step - please DM us on Instagram to confirm your drop-off.</p>
   <div class="receipt">
     <div class="row"><span>Racket</span><span id="rRacket"></span></div>
     <div class="row"><span>Tension</span><span id="rTension"></span></div>
@@ -99,9 +99,10 @@
       <div class="field">
         <label>Are you providing string? *</label>
         <div class="chips" data-group="providingString">
-          <div class="chip" data-value="yes">Yes — $15</div>
-          <div class="chip" data-value="no">No — $25</div>
+          <div class="chip" data-value="yes">Yes, $15</div>
+          <div class="chip" data-value="no">No, $25</div>
         </div>
+        <p id="stockNote" class="hint" style="font-size:13px;margin-top:8px;"></p>
       </div>
 
       <div class="field">
@@ -143,7 +144,7 @@
       <div class="field">
         <label for="dateNeeded">Date needed back by</label>
         <input type="date" id="dateNeeded">
-        <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:8px 0 0;">Turnaround is typically 1–2 business days after drop-off. We'll notify you of any delays, or if it's strung early.</p>
+        <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:8px 0 0;">Turnaround is typically 1-2 business days after drop-off. We'll notify you of any delays, or if it's strung early.</p>
       </div>
 
       <div class="field">
@@ -157,9 +158,9 @@
     <div class="summary-col">
       <div class="summary">
         <div class="title">Order summary</div>
-        <div class="row"><span>Stringing</span><span id="sString">—</span></div>
-        <div class="row"><span>Grip</span><span id="sGrip">—</span></div>
-        <div class="row"><span>Cushion wrap</span><span id="sCushion">—</span></div>
+        <div class="row"><span>Stringing</span><span id="sString">-</span></div>
+        <div class="row"><span>Grip</span><span id="sGrip">-</span></div>
+        <div class="row"><span>Cushion wrap</span><span id="sCushion">-</span></div>
         <div class="total-row"><span style="font-size:14px;opacity:0.8;">Estimated total</span><span class="total" id="sTotal">$0</span></div>
         <p style="font-size:12px;line-height:1.5;opacity:0.7;margin:16px 0 0;">Cash preferred at drop-off. DM @palybadmintonstringing for other payment methods.</p>
       </div>
@@ -167,6 +168,8 @@
   </div>
 </div>
 
+<script src="/vendor/gsap.min.js"></script>
+<script src="/vendor/ScrollTrigger.min.js"></script>
 <script src="/nav.js"></script>
 <script src="/order.js"></script>
 </body>

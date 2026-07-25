@@ -1,4 +1,4 @@
-// Postgres (Neon) — works on Vercel serverless and locally.
+// Postgres (Neon) - works on Vercel serverless and locally.
 // Set DATABASE_URL (Neon connection string, or any Postgres).
 import pg from 'pg';
 
@@ -61,6 +61,13 @@ export function migrate() {
         special_requests TEXT NOT NULL DEFAULT '',
         total INTEGER NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','in_progress','ready','completed')),
+        created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT
+      );
+
+      CREATE TABLE IF NOT EXISTS string_stock (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        in_stock BOOLEAN NOT NULL DEFAULT TRUE,
         created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT
       );
 

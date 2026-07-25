@@ -9,7 +9,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const btn = document.getElementById('loginBtn');
   box.classList.add('hidden');
   btn.disabled = true;
-  btn.textContent = 'Signing in…';
+  btn.textContent = 'Signing in...';
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -27,7 +27,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
     location.href = '/admin';
   } catch {
-    box.textContent = 'Network error — please try again.';
+    box.textContent = 'Network error - please try again.';
     box.classList.remove('hidden');
   } finally {
     btn.disabled = false;

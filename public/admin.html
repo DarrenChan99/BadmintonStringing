@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Orders — Admin</title>
+<title>Orders - Admin</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0A4B29">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -101,6 +101,17 @@
   <div class="orders" id="orders"></div>
   <div class="empty hidden" id="empty">
     <p style="font-size:15px;color:rgba(26,31,27,0.55);margin:0;">No orders match. Submissions from the booking form show up here automatically.</p>
+  </div>
+
+  <div class="users-card" id="stockCard">
+    <h2>String stock</h2>
+    <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:0 0 8px;">Strings shown to customers on the booking page as available when we provide the string.</p>
+    <div class="error-box hidden" id="stockError" style="margin:12px 0;"></div>
+    <div id="stockList"></div>
+    <form class="add-user-form" id="addStockForm" style="grid-template-columns:1fr auto;">
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">String name</label><input type="text" id="stockName" required maxlength="100" placeholder="ex: Yonex BG65"></div>
+      <button type="submit" class="sm-btn" style="color:var(--cream);background:var(--green);border:none;height:42px;">Add string</button>
+    </form>
   </div>
 
   <!-- owner only -->

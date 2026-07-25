@@ -41,14 +41,14 @@ const orderLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many submissions — please try again later or DM us on Instagram.' }
+  message: { error: 'Too many submissions - please try again later or DM us on Instagram.' }
 });
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many login attempts — try again in 15 minutes.' }
+  message: { error: 'Too many login attempts - try again in 15 minutes.' }
 });
 
 // ---------- validation helpers ----------
@@ -94,6 +94,11 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
       dropoff, dateNeeded, specialRequests, total]);
 
   res.status(201).json({ ok: true, id: rows[0].id, total });
+}));
+
+app.get('/api/string-stock', wrap(async (_req, res) => {
+  const { rows } = await q('SELECT name FROM string_stock WHERE in_stock = TRUE ORDER BY name');
+  res.json({ strings: rows.map((r) => r.name) });
 }));
 
 // ---------- auth API ----------
@@ -153,7 +158,7 @@ app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
   const header = ['Name','Contact','Racket','Tension','String','Grip','Cushion','Total','Status','Dropoff','Needed by','Notes','Submitted'];
   const esc = (c) => '"' + String(c ?? '').replace(/"/g, '""') + '"';
   const pad = (n) => String(n).padStart(2, '0');
-  // dd/mm/yy — always include the year in exports so old spreadsheets stay unambiguous
+  // dd/mm/yy - always include the year in exports so old spreadsheets stay unambiguous
   const fmtStamp = (unixSeconds) => {
     const d = new Date(Number(unixSeconds) * 1000);
     return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -175,6 +180,62 @@ app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="orders.csv"');
   res.send(lines.join('\n'));
+}));
+
+// ---------- admin API (string stock) ----------
+app.get('/api/admin/string-stock', requireAuth, wrap(async (_req, res) => {
+  const { rows } = await q('SELECT * FROM string_stock ORDER BY name');
+  res.json({ strings: rows });
+}));
+
+app.post('/api/admin/string-stock', requireAuth, wrap(async (req, res) => {
+  const name = str(req.body?.name, 100);
+  if (!name) return res.status(400).json({ error: 'Enter a string name.' });
+  try {
+    const { rows } = await q('INSERT INTO string_stock (name) VALUES ($1) RETURNING *', [name]);
+    res.status(201).json({ ok: true, string: rows[0] });
+  } catch (e) {
+    if (e?.code === '23505') return res.status(409).json({ error: 'That string is already on the list.' });
+    throw e;
+  }
+}));
+
+app.patch('/api/admin/string-stock/:id', requireAuth, wrap(async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid request' });
+
+  const sets = [];
+  const params = [];
+  if (typeof req.body?.inStock === 'boolean') {
+    params.push(req.body.inStock);
+    sets.push(`in_stock = $${params.length}`);
+  }
+  if (typeof req.body?.name === 'string') {
+    const name = str(req.body.name, 100);
+    if (!name) return res.status(400).json({ error: 'Enter a string name.' });
+    params.push(name);
+    sets.push(`name = $${params.length}`);
+  }
+  if (!sets.length) return res.status(400).json({ error: 'Invalid request' });
+
+  params.push(id);
+  let r;
+  try {
+    r = await q(`UPDATE string_stock SET ${sets.join(', ')} WHERE id = $${params.length}`, params);
+  } catch (e) {
+    if (e?.code === '23505') return res.status(409).json({ error: 'That string is already on the list.' });
+    throw e;
+  }
+  if (!r.rowCount) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+}));
+
+app.delete('/api/admin/string-stock/:id', requireAuth, wrap(async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid request' });
+  const r = await q('DELETE FROM string_stock WHERE id = $1', [id]);
+  if (!r.rowCount) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
 }));
 
 // ---------- admin API (user management, owner only) ----------
@@ -235,5 +296,5 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, _req, res, _next) => {
   console.error(err);
   if (res.headersSent) return;
-  res.status(500).json({ error: 'Something went wrong on our end — please try again.' });
+  res.status(500).json({ error: 'Something went wrong on our end - please try again.' });
 });

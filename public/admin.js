@@ -39,7 +39,7 @@ function fmtDate(unixSeconds) {
 // "2026-07-25" (from <input type=date>) -> "25/07" (or "25/07/27" if another year)
 function fmtDateNeeded(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
-  if (!m) return iso; // free-text or empty — leave as-is
+  if (!m) return iso; // free-text or empty - leave as-is
   const yy = Number(m[1]) !== new Date().getFullYear() ? '/' + m[1].slice(-2) : '';
   return `${m[3]}/${m[2]}${yy}`;
 }
@@ -194,6 +194,81 @@ $('addUserForm').addEventListener('submit', async (e) => {
   }
 });
 
+// ----- string stock -----
+function showStockError(msg) {
+  const box = $('stockError');
+  box.textContent = msg;
+  box.classList.remove('hidden');
+  setTimeout(() => box.classList.add('hidden'), 5000);
+}
+
+async function patchStock(id, body) {
+  try {
+    await api(`/api/admin/string-stock/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return true;
+  } catch (err) {
+    showStockError(err.message);
+    return false;
+  }
+}
+
+async function loadStock() {
+  const { strings } = await api('/api/admin/string-stock');
+  const list = $('stockList');
+  list.replaceChildren(...strings.map((s) => {
+    const nameInput = el('input', {
+      type: 'text', value: s.name, maxlength: '100',
+      style: 'font-weight:600;font-size:14px;border:1.5px solid transparent;border-radius:8px;padding:6px 8px;background:transparent;font-family:inherit;width:220px;'
+    });
+    nameInput.addEventListener('focus', () => { nameInput.style.borderColor = 'rgba(15,107,58,0.3)'; nameInput.style.background = '#fff'; });
+    const save = async () => {
+      const name = nameInput.value.trim();
+      nameInput.style.borderColor = 'transparent';
+      nameInput.style.background = 'transparent';
+      if (!name || name === s.name) { nameInput.value = s.name; return; }
+      if (await patchStock(s.id, { name })) { s.name = name; } else { nameInput.value = s.name; }
+    };
+    nameInput.addEventListener('blur', save);
+    nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') nameInput.blur(); });
+
+    const toggle = el('div', {
+      class: 'schip' + (s.in_stock ? ' active' : ''),
+      style: s.in_stock ? 'background:#0F6B3A;border-color:#0F6B3A;' : ''
+    }, s.in_stock ? 'In stock' : 'Out of stock');
+    toggle.addEventListener('click', async () => {
+      if (await patchStock(s.id, { inStock: !s.in_stock })) { s.in_stock = !s.in_stock; loadStock(); }
+    });
+    const delBtn = el('button', { class: 'del-btn', style: 'margin-left:0;' }, 'Remove');
+    delBtn.addEventListener('click', async () => {
+      if (!confirm(`Remove ${s.name} from the list?`)) return;
+      await api(`/api/admin/string-stock/${s.id}`, { method: 'DELETE' });
+      loadStock();
+    });
+    return el('div', { class: 'user-row' },
+      nameInput,
+      el('div', { style: 'display:flex;gap:8px;align-items:center;' }, toggle, delBtn));
+  }));
+}
+
+$('addStockForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await api('/api/admin/string-stock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: $('stockName').value.trim() })
+    });
+    $('addStockForm').reset();
+    loadStock();
+  } catch (err) {
+    showStockError(err.message);
+  }
+});
+
 // ----- filters / search / logout -----
 document.querySelectorAll('.fchip').forEach((chip) => {
   chip.addEventListener('click', () => {
@@ -223,6 +298,7 @@ $('logoutBtn').addEventListener('click', async () => {
     const res = await api('/api/admin/orders');
     orders = res.orders;
     render();
+    loadStock();
     // light polling so multiple admins stay in sync
     setInterval(async () => {
       try {

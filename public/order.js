@@ -28,9 +28,9 @@ function prices() {
 
 function updateSummary() {
   const p = prices();
-  $('sString').textContent = state.providingString ? '$' + p.stringPrice : '—';
-  $('sGrip').textContent = state.grip === 'we' ? '+$2' : state.grip === 'own' ? 'own' : '—';
-  $('sCushion').textContent = state.cushion === 'we' ? '+$3' : state.cushion === 'own' ? 'own' : '—';
+  $('sString').textContent = state.providingString ? '$' + p.stringPrice : '-';
+  $('sGrip').textContent = state.grip === 'we' ? '+$2' : state.grip === 'own' ? 'own' : '-';
+  $('sCushion').textContent = state.cushion === 'we' ? '+$3' : state.cushion === 'own' ? 'own' : '-';
   $('sTotal').textContent = '$' + p.total;
 }
 
@@ -61,7 +61,7 @@ $('orderForm').addEventListener('submit', async (e) => {
 
   const btn = $('submitBtn');
   btn.disabled = true;
-  btn.textContent = 'Submitting…';
+  btn.textContent = 'Submitting...';
   try {
     const res = await fetch('/api/orders', {
       method: 'POST',
@@ -79,7 +79,7 @@ $('orderForm').addEventListener('submit', async (e) => {
       })
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) return showError(data.error || 'Something went wrong — please try again.');
+    if (!res.ok) return showError(data.error || 'Something went wrong - please try again.');
 
     // success view
     $('successHeading').textContent = 'Got it, ' + (name.split(' ')[0] || 'there') + '!';
@@ -90,7 +90,7 @@ $('orderForm').addEventListener('submit', async (e) => {
     $('successView').classList.remove('hidden');
     window.scrollTo(0, 0);
   } catch {
-    showError('Network error — please check your connection and try again.');
+    showError('Network error - please check your connection and try again.');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Submit racket';
@@ -115,3 +115,9 @@ $('resetBtn').addEventListener('click', () => {
 });
 
 updateSummary();
+
+fetch('/api/string-stock').then((r) => r.json()).then(({ strings }) => {
+  $('stockNote').textContent = strings?.length
+    ? `In stock if we provide the string: ${strings.join(', ')}.`
+    : '';
+}).catch(() => {});

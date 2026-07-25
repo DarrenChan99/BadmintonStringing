@@ -128,12 +128,6 @@ input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
 }
 .hidden { display: none !important; }
 
-/* ---- scroll reveal ----
-   Only hidden once JS confirms it can reveal them (html.js, set by nav.js), so
-   a script failure or no-JS browser shows all content instead of a blank page. */
-.js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.55s ease, transform 0.55s ease; }
-.js .reveal.in { opacity: 1; transform: none; }
-
 /* ---- accents that keep elements off the background ---- */
 .rule { background: linear-gradient(90deg, var(--green-400), var(--green-dark)); }
 
