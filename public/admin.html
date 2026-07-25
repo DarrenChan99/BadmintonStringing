@@ -22,7 +22,8 @@
   .stat .label { font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,31,27,0.5); margin-bottom:6px; }
   .stat .value { font-family:'Oswald',sans-serif; font-weight:700; font-size:26px; color:var(--green); }
   .filter-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
-  .filter-bar input { margin-left:auto; padding:9px 16px; border-radius:999px; border:1.5px solid rgba(15,107,58,0.25); font-size:13px; font-family:inherit; background:#fff; min-width:220px; }
+  .filter-bar input { margin-left:auto; padding:9px 16px; border-radius:999px; border:1.5px solid rgba(15,107,58,0.25); font-size:13px; font-family:inherit; background:var(--green-50); min-width:220px; }
+  .filter-bar input:focus { background:#fff; }
   .fchip { font-size:13px; font-weight:600; padding:8px 14px; border-radius:999px; cursor:pointer; border:1.5px solid rgba(15,107,58,0.2); background:#fff; user-select:none; }
   .fchip { transition:background .15s ease, border-color .15s ease, transform .15s ease; }
   .fchip:hover { border-color:var(--green); background:var(--green-50); }
@@ -55,7 +56,8 @@
   .users-card h2 { font-family:'Oswald',sans-serif; font-weight:600; font-size:20px; margin:0 0 6px; }
   .user-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid rgba(15,107,58,0.1); flex-wrap:wrap; }
   .add-user-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:20px; align-items:end; }
-  .add-user-form input { padding:11px 14px; border-radius:10px; border:1.5px solid rgba(15,107,58,0.3); font-size:14px; font-family:inherit; background:var(--cream); }
+  .add-user-form input, .add-user-form select { padding:11px 14px; border-radius:10px; border:1.5px solid rgba(15,107,58,0.3); font-size:14px; font-family:inherit; background:var(--green-50); }
+  .add-user-form input:focus, .add-user-form select:focus { background:#fff; }
 </style>
 </head>
 <body>
@@ -110,7 +112,7 @@
 
     <div style="margin-bottom:20px;">
       <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Select a string to edit</label>
-      <select id="stockSelect" style="padding:11px 14px;border-radius:10px;border:1.5px solid rgba(15,107,58,0.3);font-size:14px;font-family:inherit;background:var(--cream);width:100%;max-width:360px;">
+      <select id="stockSelect" style="max-width:360px;">
         <option value="new">+ New string</option>
       </select>
     </div>
@@ -119,7 +121,7 @@
       <div class="add-user-form" style="grid-template-columns:1fr 1fr;">
         <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Name</label><input type="text" id="stockName" required maxlength="100" placeholder="ex: Yonex BG65"></div>
         <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Stock status</label>
-          <select id="stockInStock" style="padding:11px 14px;border-radius:10px;border:1.5px solid rgba(15,107,58,0.3);font-size:14px;font-family:inherit;background:var(--cream);width:100%;">
+          <select id="stockInStock">
             <option value="true">In stock</option>
             <option value="false">Out of stock</option>
           </select>
@@ -127,7 +129,7 @@
       </div>
       <div style="margin-top:12px;">
         <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Description <span style="font-weight:400;color:rgba(26,31,27,0.5);">(shown to customers via an info icon)</span></label>
-        <textarea id="stockDescription" rows="2" maxlength="300" placeholder="ex: 0.70mm string, great durability and medium repulsion" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(15,107,58,0.3);font-size:14px;font-family:inherit;background:var(--cream);resize:vertical;"></textarea>
+        <textarea id="stockDescription" rows="2" maxlength="300" placeholder="ex: 0.70mm string, great durability and medium repulsion"></textarea>
       </div>
       <div style="display:flex;gap:10px;margin-top:16px;">
         <button type="submit" class="sm-btn" id="stockSaveBtn" style="color:var(--cream);background:var(--green);border:none;">Add string</button>
