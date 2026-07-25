@@ -1,6 +1,6 @@
 'use strict';
 
-const state = { providingString: '', tension: '', grip: 'none', cushion: 'none' };
+const state = { providingString: '', stringChoice: '', tension: '', grip: 'none', cushion: 'none' };
 
 const $ = (id) => document.getElementById(id);
 
@@ -15,7 +15,10 @@ document.querySelectorAll('.chips[data-group]').forEach((group) => {
     if (key === 'tension') {
       $('tensionOther').classList.toggle('hidden', state.tension !== 'other');
     }
-    if (key === 'providingString') updateStockNote();
+    if (key === 'providingString') {
+      if (state.providingString !== 'no') { state.stringChoice = ''; renderStockChips(); }
+      updateStockNote();
+    }
     updateSummary();
   });
 });
@@ -55,6 +58,7 @@ $('orderForm').addEventListener('submit', async (e) => {
   if (!contact) return showError('Please enter a way to reach you.');
   if (!racketModel) return showError('Please enter your racket model.');
   if (!state.providingString) return showError('Please tell us if you’re providing string.');
+  if (state.providingString === 'no' && !state.stringChoice) return showError('Please pick which string you would like.');
   if (!state.tension) return showError('Please pick a tension.');
   if (state.tension === 'other' && !tensionOther) return showError('Please specify your custom tension.');
 
@@ -70,6 +74,7 @@ $('orderForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({
         name, contact, racketModel,
         providingString: state.providingString,
+        stringChoice: state.stringChoice,
         tension,
         grip: state.grip,
         cushion: state.cushion,
@@ -101,6 +106,7 @@ $('orderForm').addEventListener('submit', async (e) => {
 $('resetBtn').addEventListener('click', () => {
   $('orderForm').reset();
   state.providingString = '';
+  state.stringChoice = '';
   state.tension = '';
   state.grip = 'none';
   state.cushion = 'none';
@@ -109,6 +115,8 @@ $('resetBtn').addEventListener('click', () => {
       c.classList.toggle('active', c.dataset.value === 'none' && (group.dataset.group === 'grip' || group.dataset.group === 'cushion')));
   });
   $('tensionOther').classList.add('hidden');
+  renderStockChips();
+  updateStockNote();
   updateSummary();
   $('successView').classList.add('hidden');
   $('formView').classList.remove('hidden');
@@ -139,7 +147,7 @@ function openTooltipFor(icon, text) {
   const tip = document.createElement('div');
   tip.className = 'string-tooltip';
   tip.textContent = text;
-  icon.parentElement.appendChild(tip);
+  icon.appendChild(tip);
   icon.classList.add('open');
   openTooltip = { icon, tip };
   if (window.gsap) gsap.from(tip, { opacity: 0, y: 4, duration: 0.16, ease: 'power2.out' });
@@ -150,11 +158,21 @@ document.addEventListener('click', (e) => {
 });
 
 function renderStockChips() {
+  openTooltip = null;
   const wrap = $('stockChips');
   wrap.replaceChildren(...stockStrings.map((s) => {
     const chip = document.createElement('span');
-    chip.className = 'string-chip';
+    chip.className = 'string-chip' + (state.stringChoice === s.name ? ' selected' : '');
+    chip.setAttribute('role', 'button');
+    chip.setAttribute('tabindex', '0');
     chip.append(s.name);
+    chip.addEventListener('click', () => {
+      state.stringChoice = state.stringChoice === s.name ? '' : s.name;
+      renderStockChips();
+    });
+    chip.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); chip.click(); }
+    });
     if (s.description) {
       const icon = document.createElement('span');
       icon.className = 'string-info';
@@ -166,7 +184,7 @@ function renderStockChips() {
       icon.addEventListener('mouseenter', () => openTooltipFor(icon, s.description));
       icon.addEventListener('mouseleave', () => closeTooltip());
       icon.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTooltipFor(icon, s.description); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openTooltipFor(icon, s.description); }
       });
       chip.append(icon);
     }

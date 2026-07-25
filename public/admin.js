@@ -111,6 +111,7 @@ function renderOrders() {
     const gripLabel = o.grip === 'we' ? 'grip (ours)' : o.grip === 'own' ? 'grip (own)' : null;
     const cushionLabel = o.cushion === 'we' ? 'wrap (ours)' : o.cushion === 'own' ? 'wrap (own)' : null;
     const gc = [gripLabel, cushionLabel].filter(Boolean).join(', ') || 'none';
+    const stringLabel = o.providing_string === 'yes' ? "Customer's own" : (o.string_choice || 'not specified');
 
     const delBtn = el('button', { class: 'del-btn' }, 'Delete');
     delBtn.addEventListener('click', async () => {
@@ -132,6 +133,7 @@ function renderOrders() {
       el('div', { class: 'o-grid' },
         el('div', {}, el('div', { class: 'k' }, 'Racket'), el('div', { class: 'v' }, o.racket_model)),
         el('div', {}, el('div', { class: 'k' }, 'Tension'), el('div', { class: 'v' }, o.tension)),
+        el('div', {}, el('div', { class: 'k' }, 'String'), el('div', { class: 'v' }, stringLabel)),
         el('div', {}, el('div', { class: 'k' }, 'Grip / Wrap'), el('div', { class: 'v' }, gc)),
         el('div', {}, el('div', { class: 'k' }, 'Needed by'), el('div', { class: 'v' }, o.date_needed ? fmtDateNeeded(o.date_needed) : 'not specified'))),
       o.dropoff ? el('div', { class: 'o-note' }, el('strong', {}, 'Drop-off: '), o.dropoff) : null,

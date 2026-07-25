@@ -53,6 +53,7 @@ export function migrate() {
         contact TEXT NOT NULL,
         racket_model TEXT NOT NULL,
         providing_string TEXT NOT NULL CHECK (providing_string IN ('yes','no')),
+        string_choice TEXT NOT NULL DEFAULT '',
         tension TEXT NOT NULL,
         grip TEXT NOT NULL DEFAULT 'none' CHECK (grip IN ('none','we','own')),
         cushion TEXT NOT NULL DEFAULT 'none' CHECK (cushion IN ('none','we','own')),
@@ -73,6 +74,7 @@ export function migrate() {
       );
 
       ALTER TABLE string_stock ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS string_choice TEXT NOT NULL DEFAULT '';
 
       CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
       CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);

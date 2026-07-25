@@ -33,13 +33,19 @@
   /* honeypot */
   .hp { position:absolute; left:-9999px; top:-9999px; height:1px; width:1px; overflow:hidden; }
   /* string stock chips + info tooltip */
-  .string-chip { position:relative; display:inline-flex; align-items:center; gap:6px;
-    padding:7px 12px; border-radius:999px; font-size:13px; font-weight:600;
-    background:var(--green-50); border:1px solid var(--green-200); color:var(--ink); }
-  .string-info { width:16px; height:16px; border-radius:50%; background:var(--green-200); color:var(--green-dark);
+  .string-chip { display:inline-flex; align-items:center; gap:2px;
+    padding:5px 6px 5px 14px; border-radius:999px; font-size:13px; font-weight:600;
+    background:var(--green-50); border:1.5px solid var(--green-200); color:var(--ink);
+    cursor:pointer; user-select:none; transition:border-color .15s ease, background .15s ease, color .15s ease; }
+  .string-chip:hover { border-color:var(--green-400); }
+  .string-chip.selected { background:linear-gradient(135deg, var(--green) 0%, var(--green-700) 100%);
+    border-color:var(--green); color:var(--cream); }
+  .string-info { position:relative; width:20px; height:20px; border-radius:50%; background:var(--green-200); color:var(--green-dark);
     font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;
-    cursor:pointer; user-select:none; flex-shrink:0; }
-  .string-chip:hover .string-info, .string-info.open { background:var(--green); color:var(--cream); }
+    cursor:pointer; user-select:none; flex-shrink:0; font-style:normal; }
+  .string-chip.selected .string-info { background:rgba(250,247,240,0.3); color:var(--cream); }
+  .string-info:hover, .string-info.open { background:var(--green); color:var(--cream); }
+  .string-chip.selected .string-info:hover, .string-chip.selected .string-info.open { background:var(--cream); color:var(--green-dark); }
   .string-tooltip { position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%);
     background:var(--green-dark); color:var(--cream); font-size:12.5px; font-weight:400; line-height:1.5;
     padding:10px 14px; border-radius:10px; width:max-content; max-width:240px; text-align:left;
@@ -117,7 +123,7 @@
           <div class="chip" data-value="no">No, $25</div>
         </div>
         <div id="stockNote" class="hidden" style="margin-top:12px;">
-          <p class="hint" style="font-size:13px;margin:0 0 8px;">In stock if we provide the string:</p>
+          <p class="hint" style="font-size:13px;margin:0 0 8px;">Pick which string you'd like: *</p>
           <div id="stockChips" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
         </div>
       </div>

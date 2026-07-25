@@ -72,6 +72,7 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
   const contact = str(b.contact, 200);
   const racketModel = str(b.racketModel, 200);
   const providingString = oneOf(b.providingString, ['yes', 'no']);
+  const stringChoice = str(b.stringChoice, 100);
   const tension = str(b.tension, 60);
   const grip = oneOf(b.grip, ['none', 'we', 'own'], 'none');
   const cushion = oneOf(b.cushion, ['none', 'we', 'own'], 'none');
@@ -85,12 +86,20 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
   if (!providingString) return res.status(400).json({ error: 'Please tell us if you’re providing string.' });
   if (!tension) return res.status(400).json({ error: 'Please pick a tension.' });
 
+  if (providingString === 'no') {
+    if (!stringChoice) return res.status(400).json({ error: 'Please pick which string you would like.' });
+    const { rows: stock } = await q(
+      'SELECT 1 FROM string_stock WHERE name = $1 AND in_stock = TRUE', [stringChoice]
+    );
+    if (!stock.length) return res.status(400).json({ error: 'That string is not currently in stock. Please pick another.' });
+  }
+
   const total = computeTotal(providingString, grip, cushion);
   const { rows } = await q(`
-    INSERT INTO orders (name, contact, racket_model, providing_string, tension, grip, cushion,
+    INSERT INTO orders (name, contact, racket_model, providing_string, string_choice, tension, grip, cushion,
                         dropoff, date_needed, special_requests, total)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id
-  `, [name, contact, racketModel, providingString, tension, grip, cushion,
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id
+  `, [name, contact, racketModel, providingString, providingString === 'no' ? stringChoice : '', tension, grip, cushion,
       dropoff, dateNeeded, specialRequests, total]);
 
   res.status(201).json({ ok: true, id: rows[0].id, total });
@@ -155,7 +164,7 @@ app.delete('/api/admin/orders/:id', requireAuth, wrap(async (req, res) => {
 
 app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
   const { rows } = await q('SELECT * FROM orders ORDER BY created_at DESC');
-  const header = ['Name','Contact','Racket','Tension','String','Grip','Cushion','Total','Status','Dropoff','Needed by','Notes','Submitted'];
+  const header = ['Name','Contact','Racket','Tension','String','String choice','Grip','Cushion','Total','Status','Dropoff','Needed by','Notes','Submitted'];
   const esc = (c) => '"' + String(c ?? '').replace(/"/g, '""') + '"';
   const pad = (n) => String(n).padStart(2, '0');
   // dd/mm/yy - always include the year in exports so old spreadsheets stay unambiguous
@@ -173,6 +182,7 @@ app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
     lines.push([
       o.name, o.contact, o.racket_model, o.tension,
       o.providing_string === 'yes' ? 'customer' : 'ours',
+      o.string_choice,
       o.grip, o.cushion, o.total, o.status, o.dropoff, fmtNeeded(o.date_needed),
       o.special_requests, fmtStamp(o.created_at)
     ].map(esc).join(','));
