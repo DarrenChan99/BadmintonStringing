@@ -111,7 +111,9 @@ function renderOrders() {
     const gripLabel = o.grip === 'we' ? 'grip (ours)' : o.grip === 'own' ? 'grip (own)' : null;
     const cushionLabel = o.cushion === 'we' ? 'wrap (ours)' : o.cushion === 'own' ? 'wrap (own)' : null;
     const gc = [gripLabel, cushionLabel].filter(Boolean).join(', ') || 'none';
-    const stringLabel = o.providing_string === 'yes' ? "Customer's own" : (o.string_choice || 'not specified');
+    const stringLabel = o.providing_string === 'yes'
+      ? `Own string: ${o.string_choice || 'not specified'}`
+      : (o.string_choice || 'not specified');
 
     const delBtn = el('button', { class: 'del-btn' }, 'Delete');
     delBtn.addEventListener('click', async () => {

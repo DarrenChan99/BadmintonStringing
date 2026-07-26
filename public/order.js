@@ -16,7 +16,9 @@ document.querySelectorAll('.chips[data-group]').forEach((group) => {
       $('tensionOther').classList.toggle('hidden', state.tension !== 'other');
     }
     if (key === 'providingString') {
-      if (state.providingString !== 'no') { state.stringChoice = ''; renderStockChips(); }
+      state.stringChoice = '';
+      $('ownString').value = '';
+      renderStockChips();
       updateStockNote();
     }
     updateSummary();
@@ -57,10 +59,14 @@ $('orderForm').addEventListener('submit', async (e) => {
   if (!name) return showError('Please enter your name.');
   if (!contact) return showError('Please enter a way to reach you.');
   if (!racketModel) return showError('Please enter your racket model.');
+  const ownString = $('ownString').value.trim();
   if (!state.providingString) return showError('Please tell us if you’re providing string.');
+  if (state.providingString === 'yes' && !ownString) return showError('Please tell us which string you have.');
   if (state.providingString === 'no' && !state.stringChoice) return showError('Please pick which string you would like.');
   if (!state.tension) return showError('Please pick a tension.');
   if (state.tension === 'other' && !tensionOther) return showError('Please specify your custom tension.');
+
+  if (state.providingString === 'yes') state.stringChoice = ownString;
 
   const tension = state.tension === 'other' ? tensionOther : state.tension + ' lb';
 
@@ -115,6 +121,7 @@ $('resetBtn').addEventListener('click', () => {
       c.classList.toggle('active', c.dataset.value === 'none' && (group.dataset.group === 'grip' || group.dataset.group === 'cushion')));
   });
   $('tensionOther').classList.add('hidden');
+  $('ownString').value = '';
   renderStockChips();
   updateStockNote();
   updateSummary();
@@ -193,6 +200,7 @@ function renderStockChips() {
 }
 
 function updateStockNote() {
+  $('ownStringNote').classList.toggle('hidden', state.providingString !== 'yes');
   const show = state.providingString === 'no' && stockStrings.length > 0;
   $('stockNote').classList.toggle('hidden', !show);
 }

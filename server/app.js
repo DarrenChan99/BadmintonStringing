@@ -86,7 +86,9 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
   if (!providingString) return res.status(400).json({ error: 'Please tell us if you’re providing string.' });
   if (!tension) return res.status(400).json({ error: 'Please pick a tension.' });
 
-  if (providingString === 'no') {
+  if (providingString === 'yes') {
+    if (!stringChoice) return res.status(400).json({ error: 'Please tell us which string you have.' });
+  } else if (providingString === 'no') {
     if (!stringChoice) return res.status(400).json({ error: 'Please pick which string you would like.' });
     const { rows: stock } = await q(
       'SELECT 1 FROM string_stock WHERE name = $1 AND in_stock = TRUE', [stringChoice]
@@ -99,7 +101,7 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
     INSERT INTO orders (name, contact, racket_model, providing_string, string_choice, tension, grip, cushion,
                         dropoff, date_needed, special_requests, total)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id
-  `, [name, contact, racketModel, providingString, providingString === 'no' ? stringChoice : '', tension, grip, cushion,
+  `, [name, contact, racketModel, providingString, stringChoice, tension, grip, cushion,
       dropoff, dateNeeded, specialRequests, total]);
 
   res.status(201).json({ ok: true, id: rows[0].id, total });
