@@ -14,7 +14,6 @@
   h1 { font-family:'Oswald',sans-serif; font-weight:700; font-size:clamp(26px,3vw,36px); margin:0; }
   .toolbar { display:flex; gap:8px; flex-wrap:wrap; }
   .sm-btn { font-size:13px; font-weight:600; padding:9px 16px; border-radius:999px; cursor:pointer; font-family:inherit; }
-  .info { background:linear-gradient(135deg, var(--green-50), var(--green-100)); border:1px solid var(--green-200); border-left:4px solid var(--green); border-radius:12px; padding:16px 20px; margin-bottom:28px; font-size:14px; line-height:1.6; color:rgba(26,31,27,0.75); }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:32px; }
   .stat { border-radius:14px; padding:18px 20px; background:#fff; border:1px solid var(--green-200);
     box-shadow:0 2px 8px rgba(10,75,41,0.05); transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
@@ -83,12 +82,6 @@
     </div>
   </div>
 
-  <div class="info">
-    This page shows every racket submitted through the booking form. Use the buttons on each order to mark it
-    <strong>Pending → In progress → Ready → Completed</strong> as you work on it. Use the search box or status tabs below
-    to find an order quickly.
-  </div>
-
   <div class="stats" id="stats"></div>
 
   <div class="filter-bar">
@@ -96,7 +89,7 @@
     <div class="fchip" data-filter="pending">Pending</div>
     <div class="fchip" data-filter="in_progress">In progress</div>
     <div class="fchip" data-filter="ready">Ready</div>
-    <div class="fchip" data-filter="completed">Completed</div>
+    <div class="fchip" data-filter="completed">Returned</div>
     <input type="text" id="search" placeholder="Search name, racket, contact...">
   </div>
 

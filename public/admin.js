@@ -11,7 +11,7 @@ const STATUS_META = {
   pending:     { label: 'Pending',     color: '#8a5a1a',            bg: 'rgba(200,140,20,0.14)', chip: '#8a5a1a' },
   in_progress: { label: 'In progress', color: '#0F6B3A',            bg: 'rgba(15,107,58,0.12)',  chip: '#0F6B3A' },
   ready:       { label: 'Ready',       color: '#0A4B29',            bg: 'rgba(191,227,206,0.6)', chip: '#0A4B29' },
-  completed:   { label: 'Completed',   color: 'rgba(26,31,27,0.5)', bg: 'rgba(26,31,27,0.06)',   chip: '#555' }
+  completed:   { label: 'Returned',    color: 'rgba(26,31,27,0.5)', bg: 'rgba(26,31,27,0.06)',   chip: '#555' }
 };
 
 async function api(path, opts) {
