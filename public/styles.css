@@ -21,7 +21,7 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--cream);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Karla', system-ui, sans-serif;
   color: var(--ink);
 }
 a { color: var(--green); }
