@@ -3,6 +3,8 @@
 const state = { providingString: '', stringChoice: '', tension: '', grip: 'none', cushion: 'none' };
 
 const $ = (id) => document.getElementById(id);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canAnimate = () => window.gsap && !reduceMotion;
 
 // Chip groups
 document.querySelectorAll('.chips[data-group]').forEach((group) => {
@@ -12,6 +14,7 @@ document.querySelectorAll('.chips[data-group]').forEach((group) => {
     if (!chip) return;
     state[key] = chip.dataset.value;
     group.querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c === chip));
+    if (canAnimate()) gsap.fromTo(chip, { scale: 0.95 }, { scale: 1, duration: 0.25, ease: 'back.out(3)' });
     if (key === 'tension') {
       $('tensionOther').classList.toggle('hidden', state.tension !== 'other');
     }
@@ -73,6 +76,7 @@ $('orderForm').addEventListener('submit', async (e) => {
   const btn = $('submitBtn');
   btn.disabled = true;
   btn.textContent = 'Submitting...';
+  if (canAnimate()) gsap.to(btn, { scale: 0.97, duration: 0.12, ease: 'power2.out' });
   try {
     const res = await fetch('/api/orders', {
       method: 'POST',
@@ -93,6 +97,15 @@ $('orderForm').addEventListener('submit', async (e) => {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return showError(data.error || 'Something went wrong - please try again.');
 
+    if (canAnimate()) {
+      btn.textContent = '✓ Submitted';
+      await new Promise((resolve) => {
+        gsap.timeline({ onComplete: resolve })
+          .to(btn, { scale: 1.06, duration: 0.15, ease: 'power2.out' })
+          .to(btn, { scale: 1, duration: 0.12 });
+      });
+    }
+
     // success view
     $('successHeading').textContent = 'Got it, ' + (name.split(' ')[0] || 'there') + '!';
     $('rRacket').textContent = racketModel;
@@ -106,6 +119,7 @@ $('orderForm').addEventListener('submit', async (e) => {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Submit racket';
+    if (canAnimate()) gsap.set(btn, { scale: 1 });
   }
 });
 

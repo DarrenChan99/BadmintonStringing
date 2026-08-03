@@ -10,12 +10,32 @@
 <meta property="og:title" content="Palo Alto Badminton Stringing">
 <meta property="og:description" content="Restrung right, ready to smash. Book a restring online, 1-2 day turnaround.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://palybadmintonstringing.com/">
+<meta property="og:image" content="https://palybadmintonstringing.com/icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://palybadmintonstringing.com/icon-512.png">
 <meta name="theme-color" content="#0A4B29">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Palo Alto Badminton Stringing",
+  "url": "https://palybadmintonstringing.com/",
+  "logo": "https://palybadmintonstringing.com/icon-512.png",
+  "image": "https://palybadmintonstringing.com/icon-512.png",
+  "priceRange": "$15-$25",
+  "areaServed": "Palo Alto, CA"
+}
+</script>
 <link rel="stylesheet" href="/styles.css">
 <style>
+  .pause-banner { background:#FDECC8; color:#7A4E00; text-align:center; font-size:14px; font-weight:600; padding:10px 20px; }
   .hero { position: relative; background: linear-gradient(150deg, var(--green) 0%, var(--green-dark) 55%, var(--green-900) 100%);
-    clip-path: polygon(0 0,100% 0,100% 88%,0 100%); padding: 72px 32px 128px; overflow: hidden; }
+    padding: 72px 32px 128px; overflow: hidden; }
   @keyframes heroRise { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
   .hero-inner > * { animation: heroRise .7s ease both; }
   .hero-inner > *:nth-child(2) { animation-delay:.08s; }
@@ -32,9 +52,14 @@
   .fact:last-child { border-right:none; }
   .fact .label { font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:rgba(26,31,27,0.5); margin-bottom:6px; }
   .fact .value { font-family:'Oswald',sans-serif; font-weight:600; font-size:18px; color:var(--green); }
-  .section { max-width:1180px; margin:0 auto; padding:96px 32px; }
+  .section { position:relative; z-index:0; overflow:hidden; max-width:1180px; margin:0 auto; padding:96px 32px; }
+  /* Decorative line-art in the page background, kept out of the reading flow via
+     negative z-index so it sits behind section content without a wrapper div per section. */
+  .bg-deco { position:absolute; z-index:-1; pointer-events:none; color:var(--green); }
+  .cta-band .bg-deco { color:var(--cream); }
   /* Tinted band so the guide section separates from the cream page. */
-  #guide { max-width:none; background:var(--green-50); border-block:1px solid var(--green-200); padding-inline:0; }
+  #guide { position:relative; z-index:0; overflow:hidden; max-width:none; background:var(--green-50); border-block:1px solid var(--green-200); padding-inline:0; }
+  #guide > svg.bg-deco { max-width:none; margin-inline:0; padding-inline:0; }
   #guide > * { max-width:1180px; margin-inline:auto; padding-inline:32px; }
   .section-head { text-align:center; max-width:640px; margin:0 auto 56px; }
   .section-head h2 { font-family:'Oswald',sans-serif; font-weight:700; font-size:clamp(28px,3.4vw,42px); margin:14px 0 12px; }
@@ -71,7 +96,7 @@
     transition:transform .18s ease, border-color .18s ease, background .18s ease; }
   .wrap-row:hover { transform:translateX(4px); border-color:var(--green-400); background:var(--green-50); }
   .wrap-row.mid { background:var(--green-100); border:2px solid var(--green); }
-  .cta-band { background:linear-gradient(135deg, var(--green-dark) 0%, var(--green-900) 100%); padding:80px 32px; text-align:center; }
+  .cta-band { position:relative; z-index:0; overflow:hidden; background:linear-gradient(135deg, var(--green-dark) 0%, var(--green-900) 100%); padding:80px 32px; text-align:center; }
   .cta-band h2 { font-family:'Oswald',sans-serif; font-weight:700; font-size:clamp(26px,3vw,38px); color:var(--cream); margin:0 0 16px; }
   .cta-band p { font-size:15px; color:rgba(250,247,240,0.8); margin:0 0 28px; }
   footer { padding:36px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
@@ -81,7 +106,7 @@
 
 <nav class="nav">
   <a class="brand" href="/">
-    <svg width="36" height="36" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#0A4B29"/><path d="M13 13.2 C9.6 12.6 7.2 10.1 6.2 6.2 C7.5 5.5 8.9 5.3 10 5.6 C9.3 8.6 10.7 11 13.6 11.7 Z" fill="#FAF7F0"/><path d="M21 13.2 C24.4 12.6 26.8 10.1 27.8 6.2 C26.5 5.5 25.1 5.3 24 5.6 C24.7 8.6 23.3 11 20.4 11.7 Z" fill="#FAF7F0"/><path d="M11 15.5 C11 11.6 13.6 9 17 9 C20.4 9 23 11.6 23 15.5 Z" fill="#FAF7F0"/><rect x="9" y="15" width="16" height="3" rx="1.5" fill="#FAF7F0"/><path d="M11 19.6 L15.6 19.6 L17 21.6 L18.4 19.6 L23 19.6 L17 28.8 Z" fill="#FAF7F0"/></svg>
+    <img src="/logo.png" width="36" height="36" alt="Palo Alto Badminton Stringing logo" style="display:block;">
     <span class="brand-text"><span class="brand-top">PALO ALTO</span><span class="brand-sub">BADMINTON STRINGING</span></span>
   </a>
   <div class="nav-links">
@@ -92,6 +117,8 @@
     <a class="cta" href="/order">Book Now</a>
   </div>
 </nav>
+
+<div class="pause-banner">Stringing service paused until Aug 14 — orders placed now are queued and strung first. Sorry for the delay!</div>
 
 <section class="hero">
   <svg class="court" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
@@ -106,7 +133,7 @@
     <p>The cheapest full-service stringing in the Bay Area. Drop off in person, pick your tension, and get back on court in 1-2 days.</p>
     <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
       <a class="btn btn-light" href="/order">Book a Restring</a>
-      <a class="btn btn-ghost-light" href="https://instagram.com/palybadmintonstringing" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg> DM @palybadmintonstringing</a>
+      <a class="btn btn-ghost-light" href="https://instagram.com/palybadmintonstringing" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg> DM @palybadmintonstringing</a>
     </div>
   </div>
 </section>
@@ -120,6 +147,17 @@
 </section>
 
 <section id="pricing" class="section reveal" style="padding-top:120px;padding-bottom:40px;">
+  <svg class="bg-deco" viewBox="0 0 200 320" width="360" style="top:-60px;right:-70px;opacity:0.07;transform:rotate(18deg);" aria-hidden="true">
+    <ellipse cx="100" cy="100" rx="70" ry="90" fill="none" stroke="currentColor" stroke-width="4"/>
+    <line x1="100" y1="190" x2="100" y2="300" stroke="currentColor" stroke-width="7"/>
+    <rect x="86" y="292" width="28" height="24" rx="6" fill="none" stroke="currentColor" stroke-width="3"/>
+    <g stroke="currentColor" stroke-width="1.3">
+      <line x1="55" y1="45" x2="55" y2="155"/><line x1="75" y1="22" x2="75" y2="178"/>
+      <line x1="100" y1="12" x2="100" y2="188"/><line x1="125" y1="22" x2="125" y2="178"/>
+      <line x1="145" y1="45" x2="145" y2="155"/>
+      <line x1="33" y1="68" x2="167" y2="68"/><line x1="30" y1="100" x2="170" y2="100"/><line x1="33" y1="132" x2="167" y2="132"/>
+    </g>
+  </svg>
   <div class="section-head">
     <span class="badge">Pricing</span>
     <h2>The lowest stringing price in the Bay</h2>
@@ -149,6 +187,10 @@
 </section>
 
 <section id="guide" class="section reveal">
+  <!-- Shuttlecock glyph: Delapouite, game-icons.net, CC BY 3.0 (https://game-icons.net/1x1/delapouite/shuttlecock.html) -->
+  <svg class="bg-deco" viewBox="0 0 512 512" width="190" style="top:-10px;left:-30px;opacity:0.16;transform:rotate(-8deg);" aria-hidden="true">
+    <path fill="currentColor" d="M256 25.577c-29.75 0-50.618 10.68-64.973 28.623-12.914 16.144-20.364 38.79-21.74 65.377h173.426c-1.376-26.586-8.826-49.233-21.74-65.377C306.618 36.257 285.75 25.577 256 25.577zm-87 112v14h174v-14H169zm12.443 32l-4.802 30H176v3.994l-12.357 77.167c1.428-.63 3.16-1.226 5.207-1.283.305-.01.616-.005.935.012.85.045 1.748.188 2.694.46 3.733 1.07 5.666 3.31 7.077 5.24.48.654.894 1.32 1.287 1.993l3.455-21.583h23.69l-.94 14.123c.77-.11 1.58-.17 2.448-.154.41.007.832.028 1.266.066 6.942.61 10.032 4.716 13.134 8.764.19.248.377.51.565.766l1.568-23.565h21.327v16.658c2.24-1.575 4.94-2.658 8.643-2.658 4.105 0 6.98 1.33 9.357 3.188v-17.188h22.065l1.726 21.443c2.796-3.567 5.923-6.866 12.088-7.408 2.057-.18 3.828.007 5.41.44l-1.166-14.475h23.25l3.41 20.04c.103-.15.194-.303.303-.452 1.41-1.928 3.344-4.17 7.078-5.24.947-.27 1.845-.414 2.695-.46.32-.016.63-.02.935-.01 2.137.06 3.942.705 5.405 1.364.392.176.757.372 1.125.566L336 200.966v-1.39h-.236l-5.104-30H312.4l5.104 30h-17.336l-2.414-30h-18.06l2.415 30h-16.753v-30h-18v30h-16.933l1.998-30h-18.04l-2 30H194.87l4.804-30h-18.23zm10.543 48h19.2l-2 30h-22.004l4.804-30zm37.24 0h18.13v30H227.23l1.997-30zm36.13 0h18.203l2.413 30h-20.616v-30zm36.26 0h18.95l5.104 30h-21.64l-2.413-30zm-92.542 81.246c-.26.187-.317.13-.615.403-2.248 2.058-5.392 5.725-8.773 10.486-6.76 9.522-14.636 23.43-21.718 39.035-14.166 31.21-24.75 69.83-20.933 93.586 1.633 10.164 4.142 16.383 9.713 22.98 5.046 5.977 13.334 12.386 25.902 20.348 7.703-3.16 13.956-6.07 19.063-8.903-6.09-7.457-9.938-16.05-12.442-25.98-7.73-30.66 1.108-71.263 13.133-105.434 2.81-7.982 5.82-15.557 8.914-22.56-1.638-4.26-3.286-8.186-4.902-11.6-2.498-5.278-4.953-9.437-6.807-11.856-.245-.322-.31-.274-.536-.504zm93.852 0c-.226.23-.29.182-.537.504-1.855 2.42-4.31 6.578-6.808 11.856-1.616 3.414-3.264 7.34-4.902 11.6 3.093 7.003 6.105 14.578 8.914 22.56 12.025 34.17 20.863 74.775 13.133 105.435-2.504 9.93-6.35 18.522-12.442 25.98 5.107 2.83 11.36 5.743 19.063 8.903 12.568-7.96 20.856-14.37 25.902-20.347 5.57-6.597 8.08-12.816 9.713-22.98 3.817-23.757-6.767-62.376-20.932-93.586-7.08-15.605-14.957-29.513-21.717-39.035-3.38-4.76-6.525-8.428-8.772-10.486-.297-.274-.353-.216-.614-.403zm-135.95 1.635c-1.903 1.823-4.114 4.144-6.685 7.29-7.01 8.585-15.662 21.378-23.95 35.925-16.576 29.093-31.543 65.874-32.223 89.785-.508 17.885 2.766 27.703 19.418 46.533 10.897-3.552 18.163-7.016 23.65-11.34-4.07-7.05-6.53-14.81-7.92-23.462-5.017-31.22 7.342-70.893 22.313-103.88 3.214-7.082 6.57-13.796 9.96-20.047-.554-3.766-1.154-7.28-1.798-10.41-.892-4.343-1.857-7.72-2.765-10.392zm178.05 0c-.91 2.672-1.874 6.05-2.766 10.39-.644 3.132-1.244 6.646-1.797 10.413 3.39 6.252 6.745 12.966 9.96 20.048 14.97 32.987 27.33 72.66 22.313 103.88-1.39 8.653-3.85 16.412-7.922 23.46 5.488 4.326 12.754 7.79 23.65 11.343 16.653-18.83 19.927-28.647 19.42-46.532-.68-23.91-15.648-60.692-32.224-89.785-8.288-14.547-16.94-27.34-23.95-35.924-2.572-3.148-4.783-5.47-6.685-7.292zm-96.97 9.328c-.153.258-.3.483-.454.746-5.9 10.077-12.528 24.62-18.217 40.785-11.378 32.33-18.54 71.73-12.658 95.06 2.516 9.983 5.562 15.958 11.69 22.042 5.55 5.51 14.366 11.172 27.583 18.003 13.217-6.83 22.034-12.493 27.584-18.004 6.127-6.085 9.173-12.06 11.69-22.042 5.882-23.332-1.28-62.73-12.66-95.06-5.688-16.166-12.315-30.71-18.216-40.786-.154-.263-.3-.488-.455-.746L256 465.108l-7.943-155.322z"/>
+  </svg>
   <div class="section-head">
     <span class="badge">Getting it right</span>
     <h2>Tension &amp; grip guide</h2>
@@ -172,17 +214,28 @@
 </section>
 
 <section class="cta-band reveal">
+  <svg class="bg-deco" viewBox="0 0 200 320" width="280" style="bottom:-70px;right:-60px;opacity:0.18;transform:rotate(-10deg);" aria-hidden="true">
+    <ellipse cx="100" cy="100" rx="70" ry="90" fill="none" stroke="currentColor" stroke-width="5"/>
+    <line x1="100" y1="190" x2="100" y2="300" stroke="currentColor" stroke-width="8"/>
+    <rect x="86" y="292" width="28" height="24" rx="6" fill="none" stroke="currentColor" stroke-width="4"/>
+    <g stroke="currentColor" stroke-width="1.8">
+      <line x1="55" y1="45" x2="55" y2="155"/><line x1="75" y1="22" x2="75" y2="178"/>
+      <line x1="100" y1="12" x2="100" y2="188"/><line x1="125" y1="22" x2="125" y2="178"/>
+      <line x1="145" y1="45" x2="145" y2="155"/>
+      <line x1="33" y1="68" x2="167" y2="68"/><line x1="30" y1="100" x2="170" y2="100"/><line x1="33" y1="132" x2="167" y2="132"/>
+    </g>
+  </svg>
   <h2>Ready to get strung, from $15?</h2>
   <p>Cash preferred at drop-off. Questions? DM us directly and we'll reply fast.</p>
   <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
     <a class="btn btn-light" href="/order">Book a Restring</a>
-    <a class="btn btn-ghost-light" href="https://instagram.com/palybadmintonstringing" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg> DM @palybadmintonstringing</a>
+    <a class="btn btn-ghost-light" href="https://instagram.com/palybadmintonstringing" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg> DM @palybadmintonstringing</a>
   </div>
 </section>
 
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
-    <svg width="24" height="24" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#0A4B29"/><path d="M13 13.2 C9.6 12.6 7.2 10.1 6.2 6.2 C7.5 5.5 8.9 5.3 10 5.6 C9.3 8.6 10.7 11 13.6 11.7 Z" fill="#FAF7F0"/><path d="M21 13.2 C24.4 12.6 26.8 10.1 27.8 6.2 C26.5 5.5 25.1 5.3 24 5.6 C24.7 8.6 23.3 11 20.4 11.7 Z" fill="#FAF7F0"/><path d="M11 15.5 C11 11.6 13.6 9 17 9 C20.4 9 23 11.6 23 15.5 Z" fill="#FAF7F0"/><rect x="9" y="15" width="16" height="3" rx="1.5" fill="#FAF7F0"/><path d="M11 19.6 L15.6 19.6 L17 21.6 L18.4 19.6 L23 19.6 L17 28.8 Z" fill="#FAF7F0"/></svg>
+    <img src="/logo.png" width="24" height="24" alt="Palo Alto Badminton Stringing logo" style="display:block;">
     <span style="font-size:13px;font-weight:600;color:rgba(26,31,27,0.6);">Palo Alto Badminton Stringing</span>
   </div>
   <div style="display:flex;align-items:center;gap:20px;">
@@ -197,6 +250,7 @@
 <script src="/vendor/gsap.min.js"></script>
 <script src="/vendor/ScrollTrigger.min.js"></script>
 <script src="/nav.js"></script>
+<script src="/buttons.js"></script>
 
 </body>
 </html>

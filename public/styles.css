@@ -67,8 +67,10 @@ input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
   display: inline-block;
   transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(10,75,41,0.22); }
-.btn:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(10,75,41,0.18); }
+.btn:hover { box-shadow: 0 8px 22px rgba(10,75,41,0.22); }
+.btn:active { box-shadow: 0 2px 6px rgba(10,75,41,0.18); }
+.btn:not(.js-anim):hover { transform: translateY(-2px); }
+.btn:not(.js-anim):active { transform: translateY(0); }
 .btn:disabled { opacity: 0.6; cursor: default; transform: none; box-shadow: none; }
 .btn-primary { color: var(--cream); background: linear-gradient(135deg, var(--green) 0%, var(--green-700) 100%); }
 /* Hover darkens rather than lightens — --green-400 under cream text is 3.7:1. */
