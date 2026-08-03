@@ -151,6 +151,7 @@ input[type=date]::-webkit-calendar-picker-indicator:hover { background: var(--gr
   box-shadow: 0 3px 10px rgba(15,107,58,0.22);
 }
 .hidden { display: none !important; }
+.pause-banner { background:#FDECC8; color:#7A4E00; text-align:center; font-size:14px; font-weight:600; padding:10px 20px; }
 
 /* ---- accents that keep elements off the background ---- */
 .rule { background: linear-gradient(90deg, var(--green-400), var(--green-dark)); }

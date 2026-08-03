@@ -112,6 +112,13 @@ app.get('/api/string-stock', wrap(async (_req, res) => {
   res.json({ strings: rows });
 }));
 
+app.get('/api/banner', wrap(async (req, res) => {
+  const page = oneOf(req.query.page, ['home', 'booking'], 'home');
+  const col = page === 'booking' ? 'show_booking' : 'show_home';
+  const { rows } = await q(`SELECT message FROM banners WHERE active = TRUE AND ${col} = TRUE LIMIT 1`);
+  res.json({ message: rows[0]?.message || null });
+}));
+
 // ---------- auth API ----------
 app.post('/api/auth/login', loginLimiter, wrap(async (req, res) => {
   const username = str(req.body?.username, 200).toLowerCase();
@@ -254,6 +261,67 @@ app.delete('/api/admin/string-stock/:id', requireAuth, wrap(async (req, res) => 
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid request' });
   const r = await q('DELETE FROM string_stock WHERE id = $1', [id]);
+  if (!r.rowCount) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+}));
+
+// ---------- admin API (banners) ----------
+app.get('/api/admin/banners', requireAuth, wrap(async (_req, res) => {
+  const { rows } = await q('SELECT * FROM banners ORDER BY created_at DESC');
+  res.json({ banners: rows });
+}));
+
+app.post('/api/admin/banners', requireAuth, wrap(async (req, res) => {
+  const message = str(req.body?.message, 300);
+  const active = req.body?.active === true;
+  const showHome = req.body?.showHome !== false;
+  const showBooking = req.body?.showBooking !== false;
+  if (!message) return res.status(400).json({ error: 'Enter a banner message.' });
+  if (active) await q('UPDATE banners SET active = FALSE WHERE active = TRUE');
+  const { rows } = await q(
+    'INSERT INTO banners (message, active, show_home, show_booking) VALUES ($1,$2,$3,$4) RETURNING *',
+    [message, active, showHome, showBooking]
+  );
+  res.status(201).json({ ok: true, banner: rows[0] });
+}));
+
+app.patch('/api/admin/banners/:id', requireAuth, wrap(async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid request' });
+
+  const sets = [];
+  const params = [];
+  if (typeof req.body?.message === 'string') {
+    const message = str(req.body.message, 300);
+    if (!message) return res.status(400).json({ error: 'Enter a banner message.' });
+    params.push(message);
+    sets.push(`message = $${params.length}`);
+  }
+  if (typeof req.body?.active === 'boolean') {
+    if (req.body.active) await q('UPDATE banners SET active = FALSE WHERE active = TRUE AND id != $1', [id]);
+    params.push(req.body.active);
+    sets.push(`active = $${params.length}`);
+  }
+  if (typeof req.body?.showHome === 'boolean') {
+    params.push(req.body.showHome);
+    sets.push(`show_home = $${params.length}`);
+  }
+  if (typeof req.body?.showBooking === 'boolean') {
+    params.push(req.body.showBooking);
+    sets.push(`show_booking = $${params.length}`);
+  }
+  if (!sets.length) return res.status(400).json({ error: 'Invalid request' });
+
+  params.push(id);
+  const r = await q(`UPDATE banners SET ${sets.join(', ')} WHERE id = $${params.length}`, params);
+  if (!r.rowCount) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+}));
+
+app.delete('/api/admin/banners/:id', requireAuth, wrap(async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid request' });
+  const r = await q('DELETE FROM banners WHERE id = $1', [id]);
   if (!r.rowCount) return res.status(404).json({ error: 'Not found' });
   res.json({ ok: true });
 }));

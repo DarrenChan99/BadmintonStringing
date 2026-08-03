@@ -101,6 +101,46 @@
     <p style="font-size:15px;color:rgba(26,31,27,0.55);margin:0;">No orders match. Submissions from the booking form show up here automatically.</p>
   </div>
 
+  <div class="users-card" id="bannerCard">
+    <h2>Site banner</h2>
+    <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:0 0 8px;">The notice bar shown at the top of the homepage (ex: service paused, holiday hours). Only one banner can be active at a time.</p>
+    <div class="error-box hidden" id="bannerError" style="margin:12px 0;"></div>
+
+    <div style="margin-bottom:20px;">
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Select a banner to edit</label>
+      <select id="bannerSelect" style="max-width:360px;">
+        <option value="new">+ New banner</option>
+      </select>
+    </div>
+
+    <form id="bannerForm">
+      <div>
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Message</label>
+        <textarea id="bannerMessage" rows="2" required maxlength="300" placeholder="ex: Stringing service paused until Aug 14 - orders placed now are queued and strung first. Sorry for the delay!"></textarea>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Status</label>
+        <select id="bannerActive" style="max-width:200px;">
+          <option value="true">Active (shown on site)</option>
+          <option value="false">Inactive (hidden)</option>
+        </select>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Visible on</label>
+        <label style="font-size:14px;font-weight:400;display:inline-flex;align-items:center;gap:6px;margin-right:16px;">
+          <input type="checkbox" id="bannerShowHome"> Homepage
+        </label>
+        <label style="font-size:14px;font-weight:400;display:inline-flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="bannerShowBooking"> Booking page
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="submit" class="sm-btn" id="bannerSaveBtn" style="color:var(--cream);background:var(--green);border:none;">Add banner</button>
+        <button type="button" class="del-btn hidden" id="bannerDeleteBtn" style="margin-left:0;">Delete this banner</button>
+      </div>
+    </form>
+  </div>
+
   <div class="users-card" id="stockCard">
     <h2>String stock</h2>
     <p style="font-size:13px;color:rgba(26,31,27,0.55);margin:0 0 8px;">Strings customers can see when they choose "No, we provide the string." Add an optional description, it shows as an info note on the booking page.</p>

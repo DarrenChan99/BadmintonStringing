@@ -198,6 +198,91 @@ $('addUserForm').addEventListener('submit', async (e) => {
   }
 });
 
+// ----- banner -----
+let banners = [];
+
+function showBannerError(msg) {
+  const box = $('bannerError');
+  box.textContent = msg;
+  box.classList.remove('hidden');
+  setTimeout(() => box.classList.add('hidden'), 5000);
+}
+
+function fillBannerForm(b) {
+  $('bannerMessage').value = b ? b.message : '';
+  $('bannerActive').value = b ? String(b.active) : 'true';
+  $('bannerShowHome').checked = b ? b.show_home : true;
+  $('bannerShowBooking').checked = b ? b.show_booking : true;
+  $('bannerSaveBtn').textContent = b ? 'Save changes' : 'Add banner';
+  $('bannerDeleteBtn').classList.toggle('hidden', !b);
+  if (window.gsap) gsap.from('#bannerForm', { opacity: 0.4, duration: 0.2, ease: 'power1.out' });
+}
+
+async function loadBanners() {
+  const { banners: rows } = await api('/api/admin/banners');
+  banners = rows;
+  const select = $('bannerSelect');
+  const prev = select.value;
+  select.replaceChildren(
+    el('option', { value: 'new' }, '+ New banner'),
+    ...banners.map((b) => el('option', { value: String(b.id) },
+      (b.message.length > 50 ? b.message.slice(0, 50) + '…' : b.message) + (b.active ? ' (active)' : '')))
+  );
+  select.value = banners.some((b) => String(b.id) === prev) ? prev : 'new';
+  fillBannerForm(banners.find((b) => String(b.id) === select.value));
+}
+
+$('bannerSelect').addEventListener('change', () => {
+  fillBannerForm(banners.find((b) => String(b.id) === $('bannerSelect').value));
+});
+
+$('bannerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = $('bannerSelect').value;
+  const body = {
+    message: $('bannerMessage').value.trim(),
+    active: $('bannerActive').value === 'true',
+    showHome: $('bannerShowHome').checked,
+    showBooking: $('bannerShowBooking').checked
+  };
+  if (!body.message) return showBannerError('Enter a banner message.');
+  try {
+    if (id === 'new') {
+      const { banner } = await api('/api/admin/banners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      await loadBanners();
+      $('bannerSelect').value = String(banner.id);
+      fillBannerForm(banners.find((b) => b.id === banner.id));
+    } else {
+      await api(`/api/admin/banners/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      await loadBanners();
+      $('bannerSelect').value = id;
+      fillBannerForm(banners.find((b) => String(b.id) === id));
+    }
+  } catch (err) {
+    showBannerError(err.message);
+  }
+});
+
+$('bannerDeleteBtn').addEventListener('click', async () => {
+  const id = $('bannerSelect').value;
+  const b = banners.find((b) => String(b.id) === id);
+  if (!b || !confirm('Delete this banner?')) return;
+  try {
+    await api(`/api/admin/banners/${id}`, { method: 'DELETE' });
+    await loadBanners();
+  } catch (err) {
+    showBannerError(err.message);
+  }
+});
+
 // ----- string stock -----
 let stockStrings = [];
 
@@ -311,6 +396,7 @@ $('logoutBtn').addEventListener('click', async () => {
     orders = res.orders;
     render();
     loadStock();
+    loadBanners();
     // light polling so multiple admins stay in sync
     setInterval(async () => {
       try {

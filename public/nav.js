@@ -4,6 +4,17 @@ fetch('/api/auth/me').then((r) => {
   if (r.ok) document.getElementById('dashLink')?.classList.remove('hidden');
 });
 
+// Site-wide notice banner, configured from the admin dashboard.
+const siteBanner = document.getElementById('siteBanner');
+if (siteBanner) {
+  const page = location.pathname.replace(/\.html$/, '') === '/order' ? 'booking' : 'home';
+  fetch(`/api/banner?page=${page}`).then((r) => r.json()).then(({ message }) => {
+    if (!message) return;
+    siteBanner.textContent = message;
+    siteBanner.classList.remove('hidden');
+  }).catch(() => {});
+}
+
 // Reveal .reveal elements as they scroll into view with GSAP ScrollTrigger.
 // Falls back to plain visible content if GSAP failed to load.
 const revealTargets = document.querySelectorAll('.reveal');
