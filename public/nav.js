@@ -1,7 +1,7 @@
 'use strict';
 // Signed-in admins get a Dashboard tab in the nav.
 fetch('/api/auth/me').then((r) => {
-  if (r.ok) document.getElementById('dashLink')?.classList.remove('hidden');
+  if (r.ok) document.querySelectorAll('.dashLink').forEach(el => el.classList.remove('hidden'));
 });
 
 // Site-wide notice banner, configured from the admin dashboard.

@@ -18,6 +18,7 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+html, body { overflow-x: hidden; max-width: 100%; }
 body {
   margin: 0;
   background: var(--cream);
@@ -58,6 +59,28 @@ input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
 .nav-links a { font-size: 14px; font-weight: 500; color: var(--ink); text-decoration: none; }
 .nav-links a.cta { font-weight: 600; color: var(--cream); background: var(--green); padding: 10px 20px; border-radius: 999px; }
 
+/* ---- mobile nav menu (hidden on desktop, shown via mobile breakpoint below) ---- */
+.nav-mobile { display: none; }
+.nav-mobile summary {
+  list-style: none; cursor: pointer; width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--green-200);
+}
+.nav-mobile summary::-webkit-details-marker { display: none; }
+.nav-mobile summary svg { display: block; }
+.nav-mobile[open] summary svg .bar-top { transform: translateY(5px) rotate(45deg); }
+.nav-mobile[open] summary svg .bar-mid { opacity: 0; }
+.nav-mobile[open] summary svg .bar-bot { transform: translateY(-5px) rotate(-45deg); }
+.nav-mobile summary svg line { transform-origin: center; transition: transform .15s ease, opacity .15s ease; }
+.nav-mobile-panel {
+  position: absolute; top: calc(100% + 8px); right: 20px; left: 20px;
+  background: var(--cream); border: 1px solid var(--green-200); border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(10,75,41,0.18);
+  display: flex; flex-direction: column; padding: 8px;
+}
+.nav-mobile-panel a { padding: 12px 14px; border-radius: 8px; }
+.nav-mobile-panel a:hover { background: var(--green-50); }
+
 /* ---- buttons / chips ---- */
 .btn {
   font-size: 15px; font-weight: 600; padding: 14px 28px; border-radius: 999px;
@@ -65,9 +88,11 @@ input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
   display: inline-block;
   transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
-.btn:hover { box-shadow: 0 8px 22px rgba(10,75,41,0.22); }
+@media (hover: hover) {
+  .btn:hover { box-shadow: 0 8px 22px rgba(10,75,41,0.22); }
+  .btn:not(.js-anim):hover { transform: translateY(-2px); }
+}
 .btn:active { box-shadow: 0 2px 6px rgba(10,75,41,0.18); }
-.btn:not(.js-anim):hover { transform: translateY(-2px); }
 .btn:not(.js-anim):active { transform: translateY(0); }
 .btn:disabled { opacity: 0.6; cursor: default; transform: none; box-shadow: none; }
 .btn-primary { color: var(--cream); background: linear-gradient(135deg, var(--green) 0%, var(--green-700) 100%); }
@@ -84,7 +109,9 @@ input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
   user-select: none; box-shadow: 0 1px 3px rgba(10,75,41,0.06);
 }
 .chip { transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease; }
-.chip:hover { border-color: var(--green); background: var(--green-50); transform: translateY(-1px); }
+@media (hover: hover) {
+  .chip:hover { border-color: var(--green); background: var(--green-50); transform: translateY(-1px); }
+}
 .chip.active {
   border-color: var(--green); color: var(--cream); transform: none;
   background: linear-gradient(135deg, var(--green) 0%, var(--green-700) 100%);
@@ -162,9 +189,26 @@ input[type=date]::-webkit-calendar-picker-indicator:hover { background: var(--gr
 }
 
 /* ---- mobile ---- */
+.mobile-cta-bar { display: none; }
 @media (max-width: 640px) {
-  .nav { padding: 12px 20px; }
+  .nav { padding: 12px 20px; position: relative; }
   .nav-links { gap: 16px; }
-  /* keep just the CTA (and Dashboard, if signed in) on small screens */
+  /* desktop links move into the hamburger panel; only CTA/Dashboard stay in the bar */
   .nav-links a:not(.cta):not(#dashLink) { display: none; }
+  .nav-mobile { display: block; order: -1; flex-shrink: 0; }
+  .brand-sub { display: none; }
+  .nav { flex-wrap: nowrap; }
+  .nav-links { flex-shrink: 0; }
+
+  /* sticky bottom "Book Now" bar on the homepage */
+  body.has-mobile-cta { padding-bottom: 72px; }
+  .mobile-cta-bar {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    padding: 12px 20px; background: rgba(250,247,240,0.96); backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(15,107,58,0.14);
+  }
+  .mobile-cta-bar a.cta {
+    flex: 1; text-align: center; font-weight: 600; color: var(--cream);
+    background: var(--green); padding: 13px 20px; border-radius: 999px; text-decoration: none;
+  }
 }

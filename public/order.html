@@ -56,6 +56,11 @@
     box-shadow:0 8px 20px rgba(10,75,41,0.25); pointer-events:none; z-index:5; }
   .string-tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
     border:6px solid transparent; border-top-color:var(--green-dark); }
+  @media (max-width: 640px) {
+    .summary-col { position:static; }
+    .string-tooltip { left:auto; right:-8px; transform:none; max-width:min(240px, calc(100vw - 56px)); }
+    .string-tooltip::after { left:auto; right:16px; transform:none; }
+  }
 </style>
 </head>
 <body>
@@ -66,7 +71,7 @@
     <span class="brand-text"><span class="brand-top">PALO ALTO</span><span class="brand-sub">BADMINTON STRINGING</span></span>
   </a>
   <div class="nav-links">
-    <a href="/admin" id="dashLink" class="hidden">Dashboard</a>
+    <a href="/admin" id="dashLink" class="dashLink hidden">Dashboard</a>
     <a href="/" style="font-weight:600;color:var(--green);display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Back to pricing</a>
   </div>
 </nav>
