@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { q, ensureMigrated } from './db.js';
 import {
@@ -56,9 +57,45 @@ const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const oneOf = (v, opts, fallback = null) => (opts.includes(v) ? v : fallback);
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
-function computeTotal(providingString, grip, cushion) {
+export function computeTotal(providingString, grip, cushion) {
   const stringPrice = providingString === 'yes' ? 15 : 25;
   return stringPrice + (grip === 'we' ? 2 : 0) + (cushion === 'we' ? 3 : 0);
+}
+
+/** The racket lifecycle, in order. Mirrored by the CHECK constraint in db.js. */
+export const STATUSES = ['pending_pickup', 'received', 'stringing', 'ready', 'returned'];
+
+const MAX_RACKETS = 8;
+
+/**
+ * Validate one racket of a submission.
+ * `stock` is a Set of in-stock string names (only consulted when we supply the string).
+ * Returns { racket } or { error }.
+ */
+export function validateRacket(r, stock) {
+  const racketModel = str(r?.racketModel, 200);
+  const providingString = oneOf(r?.providingString, ['yes', 'no']);
+  const stringChoice = str(r?.stringChoice, 100);
+  const tension = str(r?.tension, 60);
+  const grip = oneOf(r?.grip, ['none', 'we', 'own'], 'none');
+  const cushion = oneOf(r?.cushion, ['none', 'we', 'own'], 'none');
+
+  if (!racketModel) return { error: 'Please enter your racket model.' };
+  if (!providingString) return { error: 'Please tell us if you’re providing string.' };
+  if (!tension) return { error: 'Please pick a tension.' };
+  if (providingString === 'yes') {
+    if (!stringChoice) return { error: 'Please tell us which string you have.' };
+  } else {
+    if (!stringChoice) return { error: 'Please pick which string you would like.' };
+    if (!stock.has(stringChoice)) return { error: 'That string is not currently in stock. Please pick another.' };
+  }
+
+  return {
+    racket: {
+      racketModel, providingString, stringChoice, tension, grip, cushion,
+      total: computeTotal(providingString, grip, cushion)
+    }
+  };
 }
 
 // ---------- public API ----------
@@ -70,41 +107,51 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
 
   const name = str(b.name, 120);
   const contact = str(b.contact, 200);
-  const racketModel = str(b.racketModel, 200);
-  const providingString = oneOf(b.providingString, ['yes', 'no']);
-  const stringChoice = str(b.stringChoice, 100);
-  const tension = str(b.tension, 60);
-  const grip = oneOf(b.grip, ['none', 'we', 'own'], 'none');
-  const cushion = oneOf(b.cushion, ['none', 'we', 'own'], 'none');
   const dropoff = str(b.dropoff, 300);
   const dateNeeded = str(b.dateNeeded, 20);
   const specialRequests = str(b.specialRequests, 1000);
 
   if (!name) return res.status(400).json({ error: 'Please enter your name.' });
   if (!contact) return res.status(400).json({ error: 'Please enter a way to reach you.' });
-  if (!racketModel) return res.status(400).json({ error: 'Please enter your racket model.' });
-  if (!providingString) return res.status(400).json({ error: 'Please tell us if you’re providing string.' });
-  if (!tension) return res.status(400).json({ error: 'Please pick a tension.' });
 
-  if (providingString === 'yes') {
-    if (!stringChoice) return res.status(400).json({ error: 'Please tell us which string you have.' });
-  } else if (providingString === 'no') {
-    if (!stringChoice) return res.status(400).json({ error: 'Please pick which string you would like.' });
-    const { rows: stock } = await q(
-      'SELECT 1 FROM string_stock WHERE name = $1 AND in_stock = TRUE', [stringChoice]
-    );
-    if (!stock.length) return res.status(400).json({ error: 'That string is not currently in stock. Please pick another.' });
+  // A submission carries one or more rackets. Older clients post a single racket at the top level.
+  const submitted = Array.isArray(b.rackets) ? b.rackets : [b];
+  if (!submitted.length) return res.status(400).json({ error: 'Please add at least one racket.' });
+  if (submitted.length > MAX_RACKETS) {
+    return res.status(400).json({ error: `Please submit at most ${MAX_RACKETS} rackets at a time.` });
   }
 
-  const total = computeTotal(providingString, grip, cushion);
+  const { rows: stockRows } = await q('SELECT name FROM string_stock WHERE in_stock = TRUE');
+  const stock = new Set(stockRows.map((s) => s.name));
+
+  const rackets = [];
+  for (const [i, r] of submitted.entries()) {
+    const { racket, error } = validateRacket(r, stock);
+    if (error) {
+      return res.status(400).json({ error: submitted.length > 1 ? `Racket ${i + 1}: ${error}` : error });
+    }
+    rackets.push(racket);
+  }
+
+  // One multi-row INSERT so a batch can never land half-written.
+  const batchId = randomUUID();
+  const cols = 13;
+  const values = rackets.flatMap((r) => [
+    name, contact, r.racketModel, r.providingString, r.stringChoice, r.tension, r.grip, r.cushion,
+    dropoff, dateNeeded, specialRequests, r.total, batchId
+  ]);
+  const placeholders = rackets
+    .map((_, i) => '(' + Array.from({ length: cols }, (_, c) => `$${i * cols + c + 1}`).join(',') + ')')
+    .join(',');
+
   const { rows } = await q(`
     INSERT INTO orders (name, contact, racket_model, providing_string, string_choice, tension, grip, cushion,
-                        dropoff, date_needed, special_requests, total)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id
-  `, [name, contact, racketModel, providingString, stringChoice, tension, grip, cushion,
-      dropoff, dateNeeded, specialRequests, total]);
+                        dropoff, date_needed, special_requests, total, batch_id)
+    VALUES ${placeholders} RETURNING id
+  `, values);
 
-  res.status(201).json({ ok: true, id: rows[0].id, total });
+  const total = rackets.reduce((sum, r) => sum + r.total, 0);
+  res.status(201).json({ ok: true, ids: rows.map((r) => r.id), id: rows[0].id, total });
 }));
 
 app.get('/api/string-stock', wrap(async (_req, res) => {
@@ -156,7 +203,7 @@ app.get('/api/admin/orders', requireAuth, wrap(async (_req, res) => {
 
 app.patch('/api/admin/orders/:id', requireAuth, wrap(async (req, res) => {
   const id = Number(req.params.id);
-  const status = oneOf(req.body?.status, ['pending', 'in_progress', 'ready', 'completed']);
+  const status = oneOf(req.body?.status, STATUSES);
   if (!Number.isInteger(id) || !status) return res.status(400).json({ error: 'Invalid request' });
   const r = await q('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
   if (!r.rowCount) return res.status(404).json({ error: 'Order not found' });
@@ -172,8 +219,8 @@ app.delete('/api/admin/orders/:id', requireAuth, wrap(async (req, res) => {
 }));
 
 app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
-  const { rows } = await q('SELECT * FROM orders ORDER BY created_at DESC');
-  const header = ['Name','Contact','Racket','Tension','String','String choice','Grip','Cushion','Total','Status','Dropoff','Needed by','Notes','Submitted'];
+  const { rows } = await q('SELECT * FROM orders ORDER BY created_at DESC, batch_id, id');
+  const header = ['Batch','Name','Contact','Racket','Tension','String','String choice','Grip','Cushion','Total','Status','Dropoff','Needed by','Notes','Submitted'];
   const esc = (c) => '"' + String(c ?? '').replace(/"/g, '""') + '"';
   const pad = (n) => String(n).padStart(2, '0');
   // dd/mm/yy - always include the year in exports so old spreadsheets stay unambiguous
@@ -189,6 +236,7 @@ app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
   const lines = [header.map(esc).join(',')];
   for (const o of rows) {
     lines.push([
+      (o.batch_id || '').slice(0, 8), // short enough to eyeball, still groups a batch together
       o.name, o.contact, o.racket_model, o.tension,
       o.providing_string === 'yes' ? 'customer' : 'ours',
       o.string_choice,

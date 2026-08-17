@@ -61,7 +61,9 @@ export function migrate() {
         date_needed TEXT NOT NULL DEFAULT '',
         special_requests TEXT NOT NULL DEFAULT '',
         total INTEGER NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','in_progress','ready','completed')),
+        batch_id TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'pending_pickup'
+          CHECK (status IN ('pending_pickup','received','stringing','ready','returned')),
         created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT
       );
 
@@ -76,6 +78,22 @@ export function migrate() {
       ALTER TABLE string_stock ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS string_choice TEXT NOT NULL DEFAULT '';
 
+      -- Rackets submitted together share a batch_id; '' means a legacy standalone racket.
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS batch_id TEXT NOT NULL DEFAULT '';
+
+      -- Four-stage statuses -> five-stage pipeline. Drop the default before rewriting,
+      -- re-add after the new CHECK, or the old 'pending' default fails the new constraint.
+      ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+      ALTER TABLE orders ALTER COLUMN status DROP DEFAULT;
+      UPDATE orders SET status = CASE status
+        WHEN 'pending'     THEN 'pending_pickup'
+        WHEN 'in_progress' THEN 'stringing'
+        WHEN 'completed'   THEN 'returned'
+        ELSE status END;
+      ALTER TABLE orders ADD CONSTRAINT orders_status_check
+        CHECK (status IN ('pending_pickup','received','stringing','ready','returned'));
+      ALTER TABLE orders ALTER COLUMN status SET DEFAULT 'pending_pickup';
+
       CREATE TABLE IF NOT EXISTS banners (
         id SERIAL PRIMARY KEY,
         message TEXT NOT NULL,
@@ -88,6 +106,7 @@ export function migrate() {
 
       CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
       CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+      CREATE INDEX IF NOT EXISTS idx_orders_batch ON orders(batch_id);
     `).then(() =>
       // Migrate databases created before the email -> username rename.
       // 42703 = no such column, i.e. already migrated or freshly created.

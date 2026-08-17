@@ -20,11 +20,11 @@ Price and convenience: cheaper than a shop, and easier to arrange than mailing a
 
 ## Operating Context
 
-Solo/independent operator: one person handles all stringing, order management, and customer communication (primarily Instagram DM). No shop or team behind it. Orders are tracked through a status workflow (pending → in progress → ready → completed) in the admin panel. Service capacity is finite — hence the queue/booking model and, at times, a paused-intake period communicated via a site banner.
+Solo/independent operator: one person handles all stringing, order management, and customer communication (primarily Instagram DM). No shop or team behind it. Rackets are tracked individually through a status workflow (pending pickup → racket received → stringing in progress → ready to return → returned) in the admin panel. A customer can submit several rackets in one go; they share a batch id and show up as a single grouped card, but each racket carries its own status so one can be finished ahead of the others. Service capacity is finite — hence the queue/booking model and, at times, a paused-intake period communicated via a site banner.
 
 ## Capabilities and Constraints
 
-- Customers choose: providing their own string vs. buying from in-house stock, tension (24-28 lb range), grip (none/we provide/customer provides), string cushion, drop-off details, and a needed-by date.
+- Customers choose, per racket: providing their own string vs. buying from in-house stock, tension (24-28 lb range), grip (none/we provide/customer provides), and string cushion. Drop-off details, needed-by date and notes apply to the whole submission.
 - Pricing: $15 with customer-supplied string, $25 with shop-provided string, +$2 grip, +$3 cushion if the shop provides them.
 - In-house string stock (name + description) is managed from the admin panel and shown to customers only when in stock.
 - A configurable site banner (message, active/inactive, and per-page visibility for homepage/booking) lets the operator communicate service status (e.g., paused intake) without a code change.

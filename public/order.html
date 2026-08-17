@@ -34,6 +34,23 @@
   .receipt .row:last-child { border-bottom:none; }
   .receipt .row span:first-child { color:rgba(26,31,27,0.55); font-size:14px; }
   .receipt .row span:last-child { font-weight:600; font-size:14px; }
+  /* section headings + added-racket list */
+  .section-head { font-family:'Oswald',sans-serif; font-weight:600; font-size:15px; letter-spacing:0.02em;
+    text-transform:uppercase; color:var(--green); margin:32px 0 16px; padding-bottom:8px;
+    border-bottom:1.5px solid var(--green-200); }
+  .racket-list { display:flex; flex-direction:column; gap:10px; margin-top:32px; }
+  .racket-row { display:flex; align-items:center; gap:12px; background:var(--green-50);
+    border:1.5px solid var(--green-200); border-radius:12px; padding:12px 14px; }
+  .racket-row .n { font-family:'Oswald',sans-serif; font-weight:700; font-size:14px; color:var(--green);
+    flex-shrink:0; width:20px; }
+  .racket-row .desc { flex:1; min-width:0; font-size:13.5px; line-height:1.45; }
+  .racket-row .desc b { display:block; font-size:14px; font-weight:700; }
+  .racket-row .cost { font-weight:700; font-size:14px; color:var(--green); flex-shrink:0; }
+  .racket-row button { background:none; border:none; padding:4px 6px; cursor:pointer; font-size:12.5px;
+    font-weight:600; color:rgba(26,31,27,0.55); border-radius:6px; }
+  .racket-row button:hover { color:var(--green); background:rgba(15,107,58,0.08); }
+  .racket-row button.rm:hover { color:#a12; background:rgba(170,17,34,0.08); }
+  .add-racket-btn { width:100%; margin-top:20px; }
   /* honeypot */
   .hp { position:absolute; left:-9999px; top:-9999px; height:1px; width:1px; overflow:hidden; }
   /* string stock chips + info tooltip */
@@ -82,15 +99,14 @@
 <div id="successView" class="success hidden">
   <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:24px;"><circle cx="28" cy="28" r="28" fill="#0F6B3A"/><path d="M16 29l8 8 16-18" fill="none" stroke="#FAF7F0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
   <h1 id="successHeading">Got it!</h1>
-  <p style="font-size:15px;line-height:1.6;color:rgba(26,31,27,0.65);margin:0 0 32px;">We've received your racket details. One last step - please DM us on Instagram to confirm your drop-off.</p>
+  <p id="successBlurb" style="font-size:15px;line-height:1.6;color:rgba(26,31,27,0.65);margin:0 0 32px;">We've received your racket details. One last step - please DM us on Instagram to confirm your drop-off.</p>
   <div class="receipt">
-    <div class="row"><span>Racket</span><span id="rRacket"></span></div>
-    <div class="row"><span>Tension</span><span id="rTension"></span></div>
+    <div id="receiptRows"></div>
     <div class="row"><span>Estimated total</span><span id="rTotal" style="font-weight:700;font-size:16px;color:var(--green);"></span></div>
   </div>
   <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
     <a class="btn btn-primary" href="https://instagram.com/palybadmintonstringing" target="_blank" rel="noopener">DM @palybadmintonstringing</a>
-    <button class="btn btn-outline" id="resetBtn">Submit another racket</button>
+    <button class="btn btn-outline" id="resetBtn">Submit more rackets</button>
   </div>
 </div>
 
@@ -99,12 +115,14 @@
   <div class="intro">
     <div class="kicker">Book a restring</div>
     <h1>Tell us about your racket</h1>
-    <p>Restringing more than one racket? Submit this form once per racket, then DM us on Instagram to confirm. Cash preferred at drop-off.</p>
+    <p>Restringing more than one racket? Add them all here - fill in one racket, hit "Add another racket", and submit them together. Then DM us on Instagram to confirm. Cash preferred at drop-off.</p>
   </div>
 
   <div class="layout">
     <form class="form-col" id="orderForm" novalidate>
       <div class="error-box hidden" id="errorBox"></div>
+
+      <div class="section-head" style="margin-top:0;">Your details</div>
 
       <div class="field">
         <label for="name">First and last name *</label>
@@ -114,6 +132,13 @@
       <div class="field">
         <label for="contact">Contact info (phone, Instagram, or email) *</label>
         <input type="text" id="contact" name="contact" placeholder="@handle, phone, or email" maxlength="200">
+      </div>
+
+      <!-- rackets already added to this submission -->
+      <div id="racketList" class="racket-list hidden"></div>
+
+      <div class="section-head">
+        <span id="racketHeading">Your racket</span>
       </div>
 
       <div class="field">
@@ -174,6 +199,10 @@
         </div>
       </div>
 
+      <button type="button" class="btn btn-outline add-racket-btn" id="addRacketBtn">＋ Add another racket</button>
+
+      <div class="section-head">Drop-off &amp; notes</div>
+
       <div class="field">
         <label for="dropoff">Planned drop-off date <span class="hint">(skip if we already have your racket)</span></label>
         <input type="text" id="dropoff" placeholder="ex: 06/04 4:20pm at big gym (dd/mm)" maxlength="300">
@@ -196,9 +225,7 @@
     <div class="summary-col">
       <div class="summary">
         <div class="title">Order summary</div>
-        <div class="row"><span>Stringing</span><span id="sString">-</span></div>
-        <div class="row"><span>Grip</span><span id="sGrip">-</span></div>
-        <div class="row"><span>Cushion wrap</span><span id="sCushion">-</span></div>
+        <div id="summaryRows"></div>
         <div class="total-row"><span style="font-size:14px;opacity:0.8;">Estimated total</span><span class="total" id="sTotal">$0</span></div>
         <p style="font-size:12px;line-height:1.5;opacity:0.7;margin:16px 0 0;">Cash preferred at drop-off. DM @palybadmintonstringing for other payment methods.</p>
       </div>
