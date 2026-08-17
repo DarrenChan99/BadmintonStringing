@@ -175,7 +175,12 @@ function renderRacketList() {
       updateSummary(); // re-renders the list too
     });
 
-    row.append(n, desc, cost, edit, rm);
+    // Price and actions travel together so they can drop to a second line on phones.
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.append(cost, edit, rm);
+
+    row.append(n, desc, actions);
     return row;
   }));
 

@@ -45,6 +45,7 @@
     flex-shrink:0; width:20px; }
   .racket-row .desc { flex:1; min-width:0; font-size:13.5px; line-height:1.45; }
   .racket-row .desc b { display:block; font-size:14px; font-weight:700; }
+  .racket-row .actions { display:flex; align-items:center; gap:12px; flex-shrink:0; }
   .racket-row .cost { font-weight:700; font-size:14px; color:var(--green); flex-shrink:0; }
   .racket-row button { background:none; border:none; padding:4px 6px; cursor:pointer; font-size:12.5px;
     font-weight:600; color:rgba(26,31,27,0.55); border-radius:6px; }
@@ -75,6 +76,12 @@
     border:6px solid transparent; border-top-color:var(--green-dark); }
   @media (max-width: 640px) {
     .summary-col { position:static; }
+    /* On a phone the price + Edit/Remove starve the description down to ~110px,
+       so drop them to a second line under it. */
+    .racket-row { flex-wrap:wrap; align-items:flex-start; }
+    .racket-row .desc { flex:1 1 140px; }
+    /* padding, not margin: it lives inside the 100% basis so the row can't overflow. */
+    .racket-row .actions { flex-basis:100%; padding-left:32px; }
     .string-tooltip { left:auto; right:-8px; transform:none; max-width:min(240px, calc(100vw - 56px)); }
     .string-tooltip::after { left:auto; right:16px; transform:none; }
   }

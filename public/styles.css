@@ -53,7 +53,8 @@ input::placeholder, textarea::placeholder { color: rgba(26,31,27,0.4); }
 }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
-.brand-top { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.01em; }
+/* "PALO ALTO" is the wordmark — never let it break across two lines. */
+.brand-top { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.01em; white-space: nowrap; }
 .brand-sub { font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.1em; color: var(--green); }
 .nav-links { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
 .nav-links a { font-size: 14px; font-weight: 500; color: var(--ink); text-decoration: none; }
@@ -198,7 +199,11 @@ input[type=date]::-webkit-calendar-picker-indicator:hover { background: var(--gr
   .nav-mobile { display: block; order: -1; flex-shrink: 0; }
   .brand-sub { display: none; }
   .nav { flex-wrap: nowrap; }
-  .nav-links { flex-shrink: 0; }
+  /* Let the link group wrap internally when it can't fit (ex: the admin-only
+     Dashboard link next to the CTA) instead of pushing the CTA off-screen.
+     The CTA pill itself never shrinks. */
+  .nav-links { flex-shrink: 1; min-width: 0; justify-content: flex-end; }
+  .nav-links a.cta { flex-shrink: 0; }
 
   /* sticky bottom "Book Now" bar on the homepage */
   body.has-mobile-cta { padding-bottom: 72px; }
@@ -211,4 +216,16 @@ input[type=date]::-webkit-calendar-picker-indicator:hover { background: var(--gr
     flex: 1; text-align: center; font-weight: 600; color: var(--cream);
     background: var(--green); padding: 13px 20px; border-radius: 999px; text-decoration: none;
   }
+}
+
+/* Small phones (iPhone SE / 320px): the nav bar is nowrap, so hamburger + brand +
+   CTA has to fit in ~288px or the CTA gets cut off at the right edge. Scale it down. */
+@media (max-width: 360px) {
+  .nav { gap: 10px; padding: 12px 16px; }
+  .brand { gap: 8px; }
+  .brand img { width: 36px; height: 36px; }
+  .brand-top { font-size: 15px; }
+  .nav-links { gap: 12px; }
+  .nav-links a { font-size: 13px; }
+  .nav-links a.cta { padding: 9px 14px; }
 }

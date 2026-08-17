@@ -33,7 +33,9 @@
   .fchip.active { border-color:var(--green); background:var(--green); color:var(--cream); box-shadow:0 3px 9px rgba(15,107,58,0.26); }
   .fchip.active:hover { background:var(--green-dark); }
   .orders { display:flex; flex-direction:column; gap:14px; }
-  .order { border-radius:14px; padding:22px 24px; background:#fff; border:1px solid var(--green-200);
+  /* Every string in a card is customer-supplied (handles, emails, racket names),
+     so break anything too long for a phone rather than letting it run off the card. */
+  .order { overflow-wrap:anywhere; border-radius:14px; padding:22px 24px; background:#fff; border:1px solid var(--green-200);
     box-shadow:0 2px 8px rgba(10,75,41,0.05); border-left:4px solid var(--green-200);
     transition:transform .18s ease, box-shadow .18s ease, border-left-color .18s ease; }
   .order:hover { transform:translateX(3px); box-shadow:0 10px 26px rgba(10,75,41,0.12); }
@@ -77,6 +79,12 @@
   .add-user-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:20px; align-items:end; }
   .add-user-form input, .add-user-form select { padding:11px 14px; border-radius:10px; border:1.5px solid rgba(15,107,58,0.3); font-size:14px; font-family:inherit; background:var(--green-50); }
   .add-user-form input:focus, .add-user-form select:focus { background:#fff; }
+  /* Phone nav: the "Admin" badge is redundant next to the page title, and dropping
+     it keeps the brand, the signed-in name and Sign out on one tidy row. */
+  @media (max-width: 640px) {
+    .nav .badge { display:none; }
+    .nav > div:last-child { gap:12px; }
+  }
 </style>
 </head>
 <body>
