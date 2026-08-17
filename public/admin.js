@@ -129,12 +129,10 @@ function matches(o, q) {
 /** One racket inside a batch card. `dim` marks rackets that don't match the active filter. */
 function racketRow(o, dim) {
   const meta = STATUS_META[o.status] || STATUS_META.pending_pickup;
-  const gripLabel = o.grip === 'we' ? 'grip (ours)' : o.grip === 'own' ? 'grip (own)' : null;
-  const cushionLabel = o.cushion === 'we' ? 'wrap (ours)' : o.cushion === 'own' ? 'wrap (own)' : null;
-  const gc = [gripLabel, cushionLabel].filter(Boolean).join(', ') || 'none';
-  const stringLabel = o.providing_string === 'yes'
-    ? `Own string: ${o.string_choice || 'not specified'}`
-    : (o.string_choice || 'not specified');
+  const supplier = { we: 'ours', own: "customer's" };
+  const cushionLabel = o.cushion === 'none'
+    ? 'none'
+    : `${supplier[o.cushion]} · ${o.cushion_layers || 2} layers`;
 
   const delBtn = el('button', { class: 'del-btn' }, 'Delete');
   delBtn.addEventListener('click', async () => {
@@ -152,8 +150,13 @@ function racketRow(o, dim) {
       el('span', { class: 'r-cost' }, '$' + o.total)),
     el('div', { class: 'r-grid' },
       el('div', {}, el('div', { class: 'k' }, 'Tension'), el('div', { class: 'v' }, o.tension)),
-      el('div', {}, el('div', { class: 'k' }, 'String'), el('div', { class: 'v' }, stringLabel)),
-      el('div', {}, el('div', { class: 'k' }, 'Grip / Wrap'), el('div', { class: 'v' }, gc))),
+      el('div', {},
+        el('div', { class: 'k' }, 'String'),
+        el('div', { class: 'v' }, o.string_choice || 'not specified'),
+        el('div', { class: 'sub' }, o.providing_string === 'yes' ? "customer's string" : 'from our stock')),
+      el('div', {}, el('div', { class: 'k' }, 'Grip'),
+        el('div', { class: 'v' }, o.grip === 'none' ? 'none' : supplier[o.grip])),
+      el('div', {}, el('div', { class: 'k' }, 'Cushion wrap'), el('div', { class: 'v' }, cushionLabel))),
     el('div', { class: 'o-actions' }, ...statusChips([o], o.status), delBtn));
 }
 
@@ -172,11 +175,16 @@ function batchCard(batch) {
           el('span', { class: 'o-name' }, first.name),
           batch.length > 1 ? el('span', { class: 'batch-count' }, batch.length + ' rackets') : null),
         el('div', { style: 'font-size:13px;color:rgba(26,31,27,0.55);' },
-          `${first.contact} · submitted ${fmtDate(first.created_at)}` +
-          (first.date_needed ? ` · needed by ${fmtDateNeeded(first.date_needed)}` : ''))),
+          `${first.contact} · submitted ${fmtDate(first.created_at)}`)),
       el('div', { class: 'o-total' }, '$' + total)),
-    first.dropoff ? el('div', { class: 'o-note' }, el('strong', {}, 'Drop-off: '), first.dropoff) : null,
-    first.special_requests ? el('div', { class: 'o-note' }, el('strong', {}, 'Notes: '), first.special_requests) : null,
+    // Batch-level details, always in the same three places so nothing is missed at a glance.
+    el('div', { class: 'o-grid' },
+      el('div', {}, el('div', { class: 'k' }, 'Needed by'),
+        el('div', { class: 'v' }, first.date_needed ? fmtDateNeeded(first.date_needed) : 'not specified')),
+      el('div', {}, el('div', { class: 'k' }, 'Drop-off'),
+        el('div', { class: 'v' }, first.dropoff || 'not specified')),
+      el('div', {}, el('div', { class: 'k' }, 'Notes'),
+        el('div', { class: 'v' }, first.special_requests || 'none'))),
     batch.length > 1
       ? el('div', { class: 'set-all' }, el('span', { class: 'k' }, 'Set all'), ...statusChips(batch, allSame))
       : null,

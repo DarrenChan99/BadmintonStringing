@@ -24,8 +24,8 @@ Solo/independent operator: one person handles all stringing, order management, a
 
 ## Capabilities and Constraints
 
-- Customers choose, per racket: providing their own string vs. buying from in-house stock, tension (24-28 lb range), grip (none/we provide/customer provides), and string cushion. Drop-off details, needed-by date and notes apply to the whole submission.
-- Pricing: $15 with customer-supplied string, $25 with shop-provided string, +$2 grip, +$3 cushion if the shop provides them.
+- Customers choose, per racket: providing their own string vs. buying from in-house stock, tension (24-28 lb range), grip (none/we provide/customer provides), and cushion wrap (none/we provide/customer provides, plus 2, 3 or 4 layers). Drop-off details, needed-by date and notes apply to the whole submission.
+- Pricing: $15 with customer-supplied string, $25 with shop-provided string, +$2 grip, +$3 cushion if the shop provides them (the cushion price is flat, regardless of layer count).
 - In-house string stock (name + description) is managed from the admin panel and shown to customers only when in stock.
 - A configurable site banner (message, active/inactive, and per-page visibility for homepage/booking) lets the operator communicate service status (e.g., paused intake) without a code change.
 - Admin roles: owner (can manage other admin accounts) vs. admin (can manage orders/stock but not users). No public signup.

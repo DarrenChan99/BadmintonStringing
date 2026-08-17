@@ -79,6 +79,8 @@ export function validateRacket(r, stock) {
   const tension = str(r?.tension, 60);
   const grip = oneOf(r?.grip, ['none', 'we', 'own'], 'none');
   const cushion = oneOf(r?.cushion, ['none', 'we', 'own'], 'none');
+  // Layers only mean anything when a wrap is actually going on the racket.
+  const cushionLayers = cushion === 'none' ? 0 : oneOf(Number(r?.cushionLayers), [2, 3, 4], 2);
 
   if (!racketModel) return { error: 'Please enter your racket model.' };
   if (!providingString) return { error: 'Please tell us if you’re providing string.' };
@@ -92,7 +94,7 @@ export function validateRacket(r, stock) {
 
   return {
     racket: {
-      racketModel, providingString, stringChoice, tension, grip, cushion,
+      racketModel, providingString, stringChoice, tension, grip, cushion, cushionLayers,
       total: computeTotal(providingString, grip, cushion)
     }
   };
@@ -135,18 +137,19 @@ app.post('/api/orders', orderLimiter, wrap(async (req, res) => {
 
   // One multi-row INSERT so a batch can never land half-written.
   const batchId = randomUUID();
-  const cols = 13;
-  const values = rackets.flatMap((r) => [
+  const row = (r) => [
     name, contact, r.racketModel, r.providingString, r.stringChoice, r.tension, r.grip, r.cushion,
-    dropoff, dateNeeded, specialRequests, r.total, batchId
-  ]);
+    r.cushionLayers, dropoff, dateNeeded, specialRequests, r.total, batchId
+  ];
+  const cols = row(rackets[0]).length;
+  const values = rackets.flatMap(row);
   const placeholders = rackets
     .map((_, i) => '(' + Array.from({ length: cols }, (_, c) => `$${i * cols + c + 1}`).join(',') + ')')
     .join(',');
 
   const { rows } = await q(`
     INSERT INTO orders (name, contact, racket_model, providing_string, string_choice, tension, grip, cushion,
-                        dropoff, date_needed, special_requests, total, batch_id)
+                        cushion_layers, dropoff, date_needed, special_requests, total, batch_id)
     VALUES ${placeholders} RETURNING id
   `, values);
 
@@ -220,7 +223,7 @@ app.delete('/api/admin/orders/:id', requireAuth, wrap(async (req, res) => {
 
 app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
   const { rows } = await q('SELECT * FROM orders ORDER BY created_at DESC, batch_id, id');
-  const header = ['Batch','Name','Contact','Racket','Tension','String','String choice','Grip','Cushion','Total','Status','Dropoff','Needed by','Notes','Submitted'];
+  const header = ['Batch','Name','Contact','Racket','Tension','String','String choice','Grip','Cushion','Layers','Total','Status','Dropoff','Needed by','Notes','Submitted'];
   const esc = (c) => '"' + String(c ?? '').replace(/"/g, '""') + '"';
   const pad = (n) => String(n).padStart(2, '0');
   // dd/mm/yy - always include the year in exports so old spreadsheets stay unambiguous
@@ -240,7 +243,7 @@ app.get('/api/admin/orders.csv', requireAuth, wrap(async (_req, res) => {
       o.name, o.contact, o.racket_model, o.tension,
       o.providing_string === 'yes' ? 'customer' : 'ours',
       o.string_choice,
-      o.grip, o.cushion, o.total, o.status, o.dropoff, fmtNeeded(o.date_needed),
+      o.grip, o.cushion, o.cushion_layers || '', o.total, o.status, o.dropoff, fmtNeeded(o.date_needed),
       o.special_requests, fmtStamp(o.created_at)
     ].map(esc).join(','));
   }

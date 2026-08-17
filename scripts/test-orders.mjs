@@ -33,6 +33,15 @@ assert.equal(valid.total, 27);
 assert.equal(valid.racketModel, 'Astrox 88D');
 assert.equal(valid.cushion, 'none', 'cushion defaults to none');
 
+// --- cushion layers ---
+const layers = (over) => validateRacket(ok(over), stock).racket.cushionLayers;
+assert.equal(layers({}), 0, 'no wrap -> no layers');
+assert.equal(layers({ cushion: 'we', cushionLayers: 4 }), 4);
+assert.equal(layers({ cushion: 'own', cushionLayers: '3' }), 3, 'accepts a numeric string from the form');
+assert.equal(layers({ cushion: 'we' }), 2, 'defaults to 2 when a wrap is chosen');
+assert.equal(layers({ cushion: 'we', cushionLayers: 9 }), 2, 'out-of-range falls back to 2');
+assert.equal(layers({ cushion: 'none', cushionLayers: 4 }), 0, 'layers ignored without a wrap');
+
 // --- batch total = sum of per-racket totals ---
 const batch = [
   ok(),                                                              // 25

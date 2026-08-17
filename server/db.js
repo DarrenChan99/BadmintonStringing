@@ -57,6 +57,7 @@ export function migrate() {
         tension TEXT NOT NULL,
         grip TEXT NOT NULL DEFAULT 'none' CHECK (grip IN ('none','we','own')),
         cushion TEXT NOT NULL DEFAULT 'none' CHECK (cushion IN ('none','we','own')),
+        cushion_layers INTEGER NOT NULL DEFAULT 0 CHECK (cushion_layers IN (0,2,3,4)),
         dropoff TEXT NOT NULL DEFAULT '',
         date_needed TEXT NOT NULL DEFAULT '',
         special_requests TEXT NOT NULL DEFAULT '',
@@ -80,6 +81,11 @@ export function migrate() {
 
       -- Rackets submitted together share a batch_id; '' means a legacy standalone racket.
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS batch_id TEXT NOT NULL DEFAULT '';
+
+      -- How many layers of cushion wrap; 0 when no wrap is being applied.
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS cushion_layers INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_cushion_layers_check;
+      ALTER TABLE orders ADD CONSTRAINT orders_cushion_layers_check CHECK (cushion_layers IN (0,2,3,4));
 
       -- Four-stage statuses -> five-stage pipeline. Drop the default before rewriting,
       -- re-add after the new CHECK, or the old 'pending' default fails the new constraint.

@@ -2,7 +2,7 @@
 
 // The form edits one racket at a time; added rackets move into `rackets` and are
 // submitted together as one batch.
-const state = { providingString: '', stringChoice: '', tension: '', grip: 'none', cushion: 'none' };
+const state = { providingString: '', stringChoice: '', tension: '', grip: 'none', cushion: 'none', cushionLayers: '' };
 const rackets = [];
 
 const $ = (id) => document.getElementById(id);
@@ -26,6 +26,11 @@ document.querySelectorAll('.chips[data-group]').forEach((group) => {
       $('ownString').value = '';
       renderStockChips();
       updateStockNote();
+    }
+    if (key === 'cushion') {
+      // Default to the most common choice so picking a wrap is still one tap.
+      state.cushionLayers = state.cushion === 'none' ? '' : (state.cushionLayers || '2');
+      syncChips();
     }
     updateSummary();
   });
@@ -67,6 +72,7 @@ function readRacket() {
       tensionRaw: state.tension, // kept so "edit" can re-select the right chip
       grip: state.grip,
       cushion: state.cushion,
+      cushionLayers: state.cushion === 'none' ? 0 : Number(state.cushionLayers || 2),
       total: prices().total
     }
   };
@@ -79,6 +85,7 @@ function syncChips() {
     group.querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c.dataset.value === state[key]));
   });
   $('tensionOther').classList.toggle('hidden', state.tension !== 'other');
+  $('layersNote').classList.toggle('hidden', state.cushion === 'none');
   renderStockChips();
   updateStockNote();
 }
@@ -89,6 +96,7 @@ function resetRacketFields() {
   state.tension = '';
   state.grip = 'none';
   state.cushion = 'none';
+  state.cushionLayers = '';
   $('racketModel').value = '';
   $('ownString').value = '';
   $('tensionOther').value = '';
@@ -101,6 +109,7 @@ function fillRacketFields(r) {
   state.tension = r.tensionRaw;
   state.grip = r.grip;
   state.cushion = r.cushion;
+  state.cushionLayers = r.cushionLayers ? String(r.cushionLayers) : '';
   $('racketModel').value = r.racketModel;
   $('ownString').value = r.providingString === 'yes' ? r.stringChoice : '';
   $('tensionOther').value = r.tensionRaw === 'other' ? r.tension : '';
@@ -112,7 +121,7 @@ function fillRacketFields(r) {
 function racketDesc(r) {
   const bits = [r.providingString === 'yes' ? `own: ${r.stringChoice}` : r.stringChoice, r.tension];
   if (r.grip !== 'none') bits.push(r.grip === 'we' ? 'grip' : 'own grip');
-  if (r.cushion !== 'none') bits.push(r.cushion === 'we' ? 'wrap' : 'own wrap');
+  if (r.cushion !== 'none') bits.push(`${r.cushion === 'we' ? 'wrap' : 'own wrap'} ×${r.cushionLayers}`);
   return bits.join(' · ');
 }
 
@@ -252,8 +261,8 @@ $('orderForm').addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name, contact,
-        rackets: batch.map(({ racketModel, providingString, stringChoice, tension, grip, cushion }) =>
-          ({ racketModel, providingString, stringChoice, tension, grip, cushion })),
+        rackets: batch.map(({ racketModel, providingString, stringChoice, tension, grip, cushion, cushionLayers }) =>
+          ({ racketModel, providingString, stringChoice, tension, grip, cushion, cushionLayers })),
         dropoff: $('dropoff').value.trim(),
         dateNeeded: $('dateNeeded').value,
         specialRequests: $('specialRequests').value.trim(),
