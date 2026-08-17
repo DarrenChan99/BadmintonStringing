@@ -7,12 +7,15 @@ let search = '';
 
 const $ = (id) => document.getElementById(id);
 
+// The racket lifecycle, in order. `short` is what fits on a chip.
 const STATUS_META = {
-  pending:     { label: 'Pending',     color: '#8a5a1a',            bg: 'rgba(200,140,20,0.14)', chip: '#8a5a1a' },
-  in_progress: { label: 'In progress', color: '#0F6B3A',            bg: 'rgba(15,107,58,0.12)',  chip: '#0F6B3A' },
-  ready:       { label: 'Ready',       color: '#0A4B29',            bg: 'rgba(191,227,206,0.6)', chip: '#0A4B29' },
-  completed:   { label: 'Returned',    color: 'rgba(26,31,27,0.5)', bg: 'rgba(26,31,27,0.06)',   chip: '#555' }
+  pending_pickup: { label: 'Pending pickup',       short: 'Pickup',    color: '#8a5a1a',            bg: 'rgba(200,140,20,0.14)', chip: '#8a5a1a' },
+  received:       { label: 'Racket received',      short: 'Received',  color: '#4a6b2a',            bg: 'rgba(120,160,60,0.16)', chip: '#4a6b2a' },
+  stringing:      { label: 'Stringing in progress', short: 'Stringing', color: '#0F6B3A',           bg: 'rgba(15,107,58,0.12)',  chip: '#0F6B3A' },
+  ready:          { label: 'Ready to return',      short: 'Ready',     color: '#0A4B29',            bg: 'rgba(191,227,206,0.6)', chip: '#0A4B29' },
+  returned:       { label: 'Returned',             short: 'Returned',  color: 'rgba(26,31,27,0.5)', bg: 'rgba(26,31,27,0.06)',   chip: '#555' }
 };
+const STATUSES = Object.keys(STATUS_META);
 
 async function api(path, opts) {
   const res = await fetch(path, opts);
@@ -60,12 +63,13 @@ function el(tag, attrs = {}, ...children) {
 }
 
 function renderStats() {
-  const countBy = (st) => orders.filter((o) => o.status === st).length;
+  const countBy = (...st) => orders.filter((o) => st.includes(o.status)).length;
   const stats = [
-    ['Total orders', orders.length, '#fff', '1px solid rgba(15,107,58,0.16)'],
-    ['Pending', countBy('pending'), 'rgba(200,140,20,0.08)', '1px solid rgba(200,140,20,0.25)'],
-    ['In progress', countBy('in_progress'), 'rgba(15,107,58,0.08)', '1px solid rgba(15,107,58,0.25)'],
-    ['Ready / Done', countBy('ready') + countBy('completed'), 'rgba(15,107,58,0.06)', '1px solid rgba(15,107,58,0.18)']
+    ['Total rackets', orders.length, '#fff', '1px solid rgba(15,107,58,0.16)'],
+    ['Pending pickup', countBy('pending_pickup'), 'rgba(200,140,20,0.08)', '1px solid rgba(200,140,20,0.25)'],
+    ['In shop', countBy('received', 'stringing'), 'rgba(15,107,58,0.08)', '1px solid rgba(15,107,58,0.25)'],
+    ['Ready to return', countBy('ready'), 'rgba(15,107,58,0.06)', '1px solid rgba(15,107,58,0.18)'],
+    ['Returned', countBy('returned'), 'rgba(26,31,27,0.03)', '1px solid rgba(26,31,27,0.12)']
   ];
   const wrap = $('stats');
   wrap.replaceChildren(...stats.map(([label, value, bg, border]) =>
@@ -74,77 +78,119 @@ function renderStats() {
       el('div', { class: 'value' }, String(value)))));
 }
 
-function statusChip(o, key) {
+async function setStatus(o, key) {
+  if (o.status === key) return;
+  await api(`/api/admin/orders/${o.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: key })
+  });
+  o.status = key;
+}
+
+/** One status chip. `targets` is every racket it applies to (one racket, or a whole batch). */
+function statusChip(targets, key, { active }) {
   const meta = STATUS_META[key];
-  const active = o.status === key;
   const chip = el('div', {
     class: 'schip' + (active ? ' active' : ''),
     style: active ? `background:${meta.chip};border-color:${meta.chip};` : ''
-  }, meta.label);
+  }, meta.short);
   chip.addEventListener('click', async () => {
-    if (o.status === key) return;
-    await api(`/api/admin/orders/${o.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: key })
-    });
-    o.status = key;
+    for (const o of targets) await setStatus(o, key);
     render();
   });
   return chip;
 }
 
+function statusChips(targets, activeKey) {
+  return STATUSES.map((key) => statusChip(targets, key, { active: activeKey === key }));
+}
+
+/** Rackets submitted together share a batch_id; legacy rows ('') stand alone. */
+function groupBatches(rows) {
+  const groups = new Map();
+  for (const o of rows) {
+    const key = o.batch_id || 'solo-' + o.id;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(o);
+  }
+  // Batches are listed newest-first, but rackets inside one read in the order submitted.
+  return [...groups.values()].map((batch) => batch.sort((a, b) => a.id - b.id));
+}
+
+function matches(o, q) {
+  if (filter !== 'all' && o.status !== filter) return false;
+  if (!q) return true;
+  return (o.name || '').toLowerCase().includes(q) ||
+         (o.racket_model || '').toLowerCase().includes(q) ||
+         (o.contact || '').toLowerCase().includes(q);
+}
+
+/** One racket inside a batch card. `dim` marks rackets that don't match the active filter. */
+function racketRow(o, dim) {
+  const meta = STATUS_META[o.status] || STATUS_META.pending_pickup;
+  const gripLabel = o.grip === 'we' ? 'grip (ours)' : o.grip === 'own' ? 'grip (own)' : null;
+  const cushionLabel = o.cushion === 'we' ? 'wrap (ours)' : o.cushion === 'own' ? 'wrap (own)' : null;
+  const gc = [gripLabel, cushionLabel].filter(Boolean).join(', ') || 'none';
+  const stringLabel = o.providing_string === 'yes'
+    ? `Own string: ${o.string_choice || 'not specified'}`
+    : (o.string_choice || 'not specified');
+
+  const delBtn = el('button', { class: 'del-btn' }, 'Delete');
+  delBtn.addEventListener('click', async () => {
+    if (!confirm(`Delete ${o.racket_model} (${o.name})?`)) return;
+    await api(`/api/admin/orders/${o.id}`, { method: 'DELETE' });
+    orders = orders.filter((x) => x.id !== o.id);
+    render();
+  });
+
+  return el('div', { class: 'racket' + (dim ? ' dim' : '') },
+    el('div', { class: 'r-head' },
+      el('span', { class: 'r-id' }, '#' + o.id),
+      el('span', { class: 'r-model' }, o.racket_model),
+      el('span', { class: 'status-pill', style: `color:${meta.color};background:${meta.bg};` }, meta.label),
+      el('span', { class: 'r-cost' }, '$' + o.total)),
+    el('div', { class: 'r-grid' },
+      el('div', {}, el('div', { class: 'k' }, 'Tension'), el('div', { class: 'v' }, o.tension)),
+      el('div', {}, el('div', { class: 'k' }, 'String'), el('div', { class: 'v' }, stringLabel)),
+      el('div', {}, el('div', { class: 'k' }, 'Grip / Wrap'), el('div', { class: 'v' }, gc))),
+    el('div', { class: 'o-actions' }, ...statusChips([o], o.status), delBtn));
+}
+
+function batchCard(batch) {
+  const q = search.trim().toLowerCase();
+  const [first] = batch;
+  const total = batch.reduce((sum, o) => sum + o.total, 0);
+  // Colour the card by its least-advanced racket - that's the work still to do.
+  const cardStatus = STATUSES.find((s) => batch.some((o) => o.status === s)) || 'pending_pickup';
+  const allSame = batch.every((o) => o.status === first.status) ? first.status : null;
+
+  return el('div', { class: 'order ' + cardStatus },
+    el('div', { class: 'o-head' },
+      el('div', {},
+        el('div', { style: 'display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;' },
+          el('span', { class: 'o-name' }, first.name),
+          batch.length > 1 ? el('span', { class: 'batch-count' }, batch.length + ' rackets') : null),
+        el('div', { style: 'font-size:13px;color:rgba(26,31,27,0.55);' },
+          `${first.contact} · submitted ${fmtDate(first.created_at)}` +
+          (first.date_needed ? ` · needed by ${fmtDateNeeded(first.date_needed)}` : ''))),
+      el('div', { class: 'o-total' }, '$' + total)),
+    first.dropoff ? el('div', { class: 'o-note' }, el('strong', {}, 'Drop-off: '), first.dropoff) : null,
+    first.special_requests ? el('div', { class: 'o-note' }, el('strong', {}, 'Notes: '), first.special_requests) : null,
+    batch.length > 1
+      ? el('div', { class: 'set-all' }, el('span', { class: 'k' }, 'Set all'), ...statusChips(batch, allSame))
+      : null,
+    ...batch.map((o) => racketRow(o, !matches(o, q))));
+}
+
 function renderOrders() {
   const q = search.trim().toLowerCase();
-  let visible = orders.filter((o) => filter === 'all' || o.status === filter);
-  if (q) {
-    visible = visible.filter((o) =>
-      (o.name || '').toLowerCase().includes(q) ||
-      (o.racket_model || '').toLowerCase().includes(q) ||
-      (o.contact || '').toLowerCase().includes(q));
-  }
+  // A batch is shown when any of its rackets matches; the rest stay visible but dimmed,
+  // so a card never hides part of a customer's job.
+  const visible = groupBatches(orders).filter((batch) => batch.some((o) => matches(o, q)));
 
   $('empty').classList.toggle('hidden', visible.length > 0);
-  const wrap = $('orders');
-  wrap.replaceChildren(...visible.map((o) => {
-    const meta = STATUS_META[o.status] || STATUS_META.pending;
-    const gripLabel = o.grip === 'we' ? 'grip (ours)' : o.grip === 'own' ? 'grip (own)' : null;
-    const cushionLabel = o.cushion === 'we' ? 'wrap (ours)' : o.cushion === 'own' ? 'wrap (own)' : null;
-    const gc = [gripLabel, cushionLabel].filter(Boolean).join(', ') || 'none';
-    const stringLabel = o.providing_string === 'yes'
-      ? `Own string: ${o.string_choice || 'not specified'}`
-      : (o.string_choice || 'not specified');
-
-    const delBtn = el('button', { class: 'del-btn' }, 'Delete');
-    delBtn.addEventListener('click', async () => {
-      if (!confirm('Delete this order?')) return;
-      await api(`/api/admin/orders/${o.id}`, { method: 'DELETE' });
-      orders = orders.filter((x) => x.id !== o.id);
-      render();
-    });
-
-    return el('div', { class: 'order ' + o.status },
-      el('div', { class: 'o-head' },
-        el('div', {},
-          el('div', { style: 'display:flex;align-items:center;gap:10px;margin-bottom:4px;' },
-            el('span', { class: 'o-name' }, o.name),
-            el('span', { class: 'status-pill', style: `color:${meta.color};background:${meta.bg};` }, meta.label)),
-          el('div', { style: 'font-size:13px;color:rgba(26,31,27,0.55);' },
-            `${o.contact} · submitted ${fmtDate(o.created_at)}`)),
-        el('div', { class: 'o-total' }, '$' + o.total)),
-      el('div', { class: 'o-grid' },
-        el('div', {}, el('div', { class: 'k' }, 'Racket'), el('div', { class: 'v' }, o.racket_model)),
-        el('div', {}, el('div', { class: 'k' }, 'Tension'), el('div', { class: 'v' }, o.tension)),
-        el('div', {}, el('div', { class: 'k' }, 'String'), el('div', { class: 'v' }, stringLabel)),
-        el('div', {}, el('div', { class: 'k' }, 'Grip / Wrap'), el('div', { class: 'v' }, gc)),
-        el('div', {}, el('div', { class: 'k' }, 'Needed by'), el('div', { class: 'v' }, o.date_needed ? fmtDateNeeded(o.date_needed) : 'not specified'))),
-      o.dropoff ? el('div', { class: 'o-note' }, el('strong', {}, 'Drop-off: '), o.dropoff) : null,
-      o.special_requests ? el('div', { class: 'o-note' }, el('strong', {}, 'Notes: '), o.special_requests) : null,
-      el('div', { class: 'o-actions' },
-        statusChip(o, 'pending'), statusChip(o, 'in_progress'),
-        statusChip(o, 'ready'), statusChip(o, 'completed'),
-        delBtn));
-  }));
+  $('orders').replaceChildren(...visible.map(batchCard));
 }
 
 function render() { renderStats(); renderOrders(); }
@@ -367,13 +413,16 @@ $('stockDeleteBtn').addEventListener('click', async () => {
 });
 
 // ----- filters / search / logout -----
-document.querySelectorAll('.fchip').forEach((chip) => {
-  chip.addEventListener('click', () => {
-    filter = chip.dataset.filter;
-    document.querySelectorAll('.fchip').forEach((c) => c.classList.toggle('active', c === chip));
-    renderOrders();
-  });
-});
+$('filters').replaceChildren(...[['all', 'All'], ...STATUSES.map((s) => [s, STATUS_META[s].short])]
+  .map(([key, label]) => {
+    const chip = el('div', { class: 'fchip' + (key === filter ? ' active' : '') }, label);
+    chip.addEventListener('click', () => {
+      filter = key;
+      document.querySelectorAll('.fchip').forEach((c) => c.classList.toggle('active', c === chip));
+      renderOrders();
+    });
+    return chip;
+  }));
 
 $('search').addEventListener('input', (e) => { search = e.target.value; renderOrders(); });
 

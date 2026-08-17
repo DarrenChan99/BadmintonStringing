@@ -37,10 +37,12 @@
     box-shadow:0 2px 8px rgba(10,75,41,0.05); border-left:4px solid var(--green-200);
     transition:transform .18s ease, box-shadow .18s ease, border-left-color .18s ease; }
   .order:hover { transform:translateX(3px); box-shadow:0 10px 26px rgba(10,75,41,0.12); }
-  .order.pending { border-left-color:#C88C14; }
-  .order.in_progress { border-left-color:var(--green-400); }
+  /* card is coloured by its least-advanced racket */
+  .order.pending_pickup { border-left-color:#C88C14; }
+  .order.received { border-left-color:var(--green-200); }
+  .order.stringing { border-left-color:var(--green-400); }
   .order.ready { border:1.5px solid var(--green); border-left:4px solid var(--green); background:var(--green-50); }
-  .order.completed { background:rgba(26,31,27,0.03); }
+  .order.returned { background:rgba(26,31,27,0.03); }
   .o-head { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
   .o-name { font-family:'Oswald',sans-serif; font-weight:600; font-size:17px; }
   .status-pill { font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
@@ -49,9 +51,22 @@
   .o-grid .k { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,31,27,0.45); margin-bottom:4px; }
   .o-grid .v { font-size:14px; font-weight:600; }
   .o-note { font-size:13px; color:rgba(26,31,27,0.65); margin-bottom:10px; }
-  .o-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid rgba(15,107,58,0.12); }
-  .schip { font-size:13px; font-weight:600; padding:8px 14px; border-radius:999px; cursor:pointer; border:1.5px solid rgba(15,107,58,0.2); background:#fff; user-select:none; }
+  .o-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid rgba(15,107,58,0.12); align-items:center; }
+  .schip { font-size:12.5px; font-weight:600; padding:7px 12px; border-radius:999px; cursor:pointer; border:1.5px solid rgba(15,107,58,0.2); background:#fff; user-select:none; }
   .schip.active { color:var(--cream); }
+  /* batch: several rackets submitted together */
+  .batch-count { font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px; color:var(--green); background:rgba(15,107,58,0.1); }
+  .set-all { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .set-all .k { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,31,27,0.45); }
+  .racket { border:1px solid rgba(15,107,58,0.14); border-radius:12px; padding:14px 16px; margin-bottom:10px; background:rgba(255,255,255,0.6); }
+  .racket.dim { opacity:0.5; }
+  .r-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .r-model { font-weight:700; font-size:15px; }
+  .r-id { font-size:12px; color:rgba(26,31,27,0.4); font-weight:600; }
+  .r-cost { margin-left:auto; font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; color:var(--green); }
+  .r-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .racket .o-actions { margin-top:12px; padding-top:12px; }
   .del-btn { margin-left:auto; font-size:13px; font-weight:600; color:#8a2020; padding:8px 14px; border-radius:999px; border:1px solid rgba(178,34,34,0.25); background:none; cursor:pointer; font-family:inherit; }
   .empty { text-align:center; padding:80px 32px; border:1.5px dashed rgba(15,107,58,0.3); border-radius:16px; }
   /* users section */
@@ -89,11 +104,8 @@
   <div class="stats" id="stats"></div>
 
   <div class="filter-bar">
-    <div class="fchip active" data-filter="all">All</div>
-    <div class="fchip" data-filter="pending">Pending</div>
-    <div class="fchip" data-filter="in_progress">In progress</div>
-    <div class="fchip" data-filter="ready">Ready</div>
-    <div class="fchip" data-filter="completed">Returned</div>
+    <!-- filter chips are generated from STATUS_META in admin.js -->
+    <div id="filters" style="display:contents;"></div>
     <input type="text" id="search" placeholder="Search name, racket, contact...">
   </div>
 

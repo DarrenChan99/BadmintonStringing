@@ -1,6 +1,9 @@
 'use strict';
 
+// The form edits one racket at a time; added rackets move into `rackets` and are
+// submitted together as one batch.
 const state = { providingString: '', stringChoice: '', tension: '', grip: 'none', cushion: 'none' };
+const rackets = [];
 
 const $ = (id) => document.getElementById(id);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -35,12 +38,170 @@ function prices() {
   return { stringPrice, gripPrice, cushionPrice, total: stringPrice + gripPrice + cushionPrice };
 }
 
+// ----- the racket currently in the form fields -----
+
+/** True once the customer has started filling in the racket block. */
+function racketBlockTouched() {
+  return !!($('racketModel').value.trim() || state.providingString || state.tension);
+}
+
+/** Validate the racket block. Returns { racket } or { error }. */
+function readRacket() {
+  const racketModel = $('racketModel').value.trim();
+  const ownString = $('ownString').value.trim();
+  const tensionOther = $('tensionOther').value.trim();
+
+  if (!racketModel) return { error: 'Please enter your racket model.' };
+  if (!state.providingString) return { error: 'Please tell us if you’re providing string.' };
+  if (state.providingString === 'yes' && !ownString) return { error: 'Please tell us which string you have.' };
+  if (state.providingString === 'no' && !state.stringChoice) return { error: 'Please pick which string you would like.' };
+  if (!state.tension) return { error: 'Please pick a tension.' };
+  if (state.tension === 'other' && !tensionOther) return { error: 'Please specify your custom tension.' };
+
+  return {
+    racket: {
+      racketModel,
+      providingString: state.providingString,
+      stringChoice: state.providingString === 'yes' ? ownString : state.stringChoice,
+      tension: state.tension === 'other' ? tensionOther : state.tension + ' lb',
+      tensionRaw: state.tension, // kept so "edit" can re-select the right chip
+      grip: state.grip,
+      cushion: state.cushion,
+      total: prices().total
+    }
+  };
+}
+
+/** Re-sync every chip group with `state`. */
+function syncChips() {
+  document.querySelectorAll('.chips[data-group]').forEach((group) => {
+    const key = group.dataset.group;
+    group.querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c.dataset.value === state[key]));
+  });
+  $('tensionOther').classList.toggle('hidden', state.tension !== 'other');
+  renderStockChips();
+  updateStockNote();
+}
+
+function resetRacketFields() {
+  state.providingString = '';
+  state.stringChoice = '';
+  state.tension = '';
+  state.grip = 'none';
+  state.cushion = 'none';
+  $('racketModel').value = '';
+  $('ownString').value = '';
+  $('tensionOther').value = '';
+  syncChips();
+}
+
+function fillRacketFields(r) {
+  state.providingString = r.providingString;
+  state.stringChoice = r.providingString === 'no' ? r.stringChoice : '';
+  state.tension = r.tensionRaw;
+  state.grip = r.grip;
+  state.cushion = r.cushion;
+  $('racketModel').value = r.racketModel;
+  $('ownString').value = r.providingString === 'yes' ? r.stringChoice : '';
+  $('tensionOther').value = r.tensionRaw === 'other' ? r.tension : '';
+  syncChips();
+}
+
+// ----- added-racket list -----
+
+function racketDesc(r) {
+  const bits = [r.providingString === 'yes' ? `own: ${r.stringChoice}` : r.stringChoice, r.tension];
+  if (r.grip !== 'none') bits.push(r.grip === 'we' ? 'grip' : 'own grip');
+  if (r.cushion !== 'none') bits.push(r.cushion === 'we' ? 'wrap' : 'own wrap');
+  return bits.join(' · ');
+}
+
+function renderRacketList() {
+  const wrap = $('racketList');
+  wrap.classList.toggle('hidden', rackets.length === 0);
+  const heading = document.createElement('div');
+  heading.className = 'section-head';
+  heading.style.margin = '0 0 4px';
+  heading.textContent = 'Rackets added';
+  wrap.replaceChildren(heading, ...rackets.map((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'racket-row';
+
+    const n = document.createElement('div');
+    n.className = 'n';
+    n.textContent = String(i + 1);
+
+    const desc = document.createElement('div');
+    desc.className = 'desc';
+    const name = document.createElement('b');
+    name.textContent = r.racketModel;
+    desc.append(name, racketDesc(r));
+
+    const cost = document.createElement('div');
+    cost.className = 'cost';
+    cost.textContent = '$' + r.total;
+
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.textContent = 'Edit';
+    edit.addEventListener('click', () => {
+      // Anything half-typed in the block would be lost, so put it at the end of the list first.
+      if (racketBlockTouched()) {
+        const { racket } = readRacket();
+        if (racket) rackets.push(racket);
+      }
+      const [picked] = rackets.splice(i, 1);
+      fillRacketFields(picked);
+      updateSummary(); // re-renders the list too
+      $('racketModel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'rm';
+    rm.textContent = 'Remove';
+    rm.setAttribute('aria-label', `Remove ${r.racketModel}`);
+    rm.addEventListener('click', () => {
+      rackets.splice(i, 1);
+      updateSummary(); // re-renders the list too
+    });
+
+    row.append(n, desc, cost, edit, rm);
+    return row;
+  }));
+
+  $('racketHeading').textContent = rackets.length ? `Racket ${rackets.length + 1}` : 'Your racket';
+  const n = rackets.length + (racketBlockTouched() ? 1 : 0);
+  $('submitBtn').textContent = n > 1 ? `Submit ${n} rackets` : 'Submit racket';
+}
+
+function summaryRow(label, value) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  const l = document.createElement('span');
+  l.textContent = label;
+  const v = document.createElement('span');
+  v.textContent = value;
+  row.append(l, v);
+  return row;
+}
+
 function updateSummary() {
   const p = prices();
-  $('sString').textContent = state.providingString ? '$' + p.stringPrice : '-';
-  $('sGrip').textContent = state.grip === 'we' ? '+$2' : state.grip === 'own' ? 'own' : '-';
-  $('sCushion').textContent = state.cushion === 'we' ? '+$3' : state.cushion === 'own' ? 'own' : '-';
-  $('sTotal').textContent = '$' + p.total;
+  const rows = rackets.map((r, i) => summaryRow(`${i + 1}. ${r.racketModel}`, '$' + r.total));
+
+  if (rackets.length === 0 || racketBlockTouched()) {
+    // The racket still being filled in - show its running price.
+    rows.push(summaryRow(
+      rackets.length ? `${rackets.length + 1}. This racket` : 'Stringing',
+      state.providingString ? '$' + p.total : '-'
+    ));
+  }
+
+  $('summaryRows').replaceChildren(...rows);
+  const added = rackets.reduce((sum, r) => sum + r.total, 0);
+  $('sTotal').textContent = '$' + (added + (racketBlockTouched() && state.providingString ? p.total : 0));
+  renderRacketList();
 }
 
 function showError(msg) {
@@ -50,28 +211,36 @@ function showError(msg) {
   box.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+$('racketModel').addEventListener('input', updateSummary);
+
+$('addRacketBtn').addEventListener('click', () => {
+  $('errorBox').classList.add('hidden');
+  const { racket, error } = readRacket();
+  if (error) return showError(error);
+  rackets.push(racket);
+  resetRacketFields();
+  updateSummary();
+  if (canAnimate()) gsap.from($('racketList').lastElementChild, { opacity: 0, y: -8, duration: 0.25, ease: 'power2.out' });
+  $('racketModel').focus();
+});
+
 $('orderForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('errorBox').classList.add('hidden');
 
   const name = $('name').value.trim();
   const contact = $('contact').value.trim();
-  const racketModel = $('racketModel').value.trim();
-  const tensionOther = $('tensionOther').value.trim();
 
   if (!name) return showError('Please enter your name.');
   if (!contact) return showError('Please enter a way to reach you.');
-  if (!racketModel) return showError('Please enter your racket model.');
-  const ownString = $('ownString').value.trim();
-  if (!state.providingString) return showError('Please tell us if you’re providing string.');
-  if (state.providingString === 'yes' && !ownString) return showError('Please tell us which string you have.');
-  if (state.providingString === 'no' && !state.stringChoice) return showError('Please pick which string you would like.');
-  if (!state.tension) return showError('Please pick a tension.');
-  if (state.tension === 'other' && !tensionOther) return showError('Please specify your custom tension.');
 
-  if (state.providingString === 'yes') state.stringChoice = ownString;
-
-  const tension = state.tension === 'other' ? tensionOther : state.tension + ' lb';
+  // Submit the added rackets plus whatever is still in the form block.
+  const batch = rackets.slice();
+  if (racketBlockTouched() || batch.length === 0) {
+    const { racket, error } = readRacket();
+    if (error) return showError(batch.length ? `Racket ${batch.length + 1}: ${error}` : error);
+    batch.push(racket);
+  }
 
   const btn = $('submitBtn');
   btn.disabled = true;
@@ -82,12 +251,9 @@ $('orderForm').addEventListener('submit', async (e) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name, contact, racketModel,
-        providingString: state.providingString,
-        stringChoice: state.stringChoice,
-        tension,
-        grip: state.grip,
-        cushion: state.cushion,
+        name, contact,
+        rackets: batch.map(({ racketModel, providingString, stringChoice, tension, grip, cushion }) =>
+          ({ racketModel, providingString, stringChoice, tension, grip, cushion })),
         dropoff: $('dropoff').value.trim(),
         dateNeeded: $('dateNeeded').value,
         specialRequests: $('specialRequests').value.trim(),
@@ -108,9 +274,20 @@ $('orderForm').addEventListener('submit', async (e) => {
 
     // success view
     $('successHeading').textContent = 'Got it, ' + (name.split(' ')[0] || 'there') + '!';
-    $('rRacket').textContent = racketModel;
-    $('rTension').textContent = tension;
-    $('rTotal').textContent = '$' + prices().total;
+    $('successBlurb').textContent = batch.length > 1
+      ? `We've received details for your ${batch.length} rackets. One last step - please DM us on Instagram to confirm your drop-off.`
+      : "We've received your racket details. One last step - please DM us on Instagram to confirm your drop-off.";
+    $('receiptRows').replaceChildren(...batch.map((r) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const l = document.createElement('span');
+      l.textContent = `${r.racketModel} · ${r.tension}`;
+      const v = document.createElement('span');
+      v.textContent = '$' + r.total;
+      row.append(l, v);
+      return row;
+    }));
+    $('rTotal').textContent = '$' + batch.reduce((sum, r) => sum + r.total, 0);
     $('formView').classList.add('hidden');
     $('successView').classList.remove('hidden');
     window.scrollTo(0, 0);
@@ -118,26 +295,15 @@ $('orderForm').addEventListener('submit', async (e) => {
     showError('Network error - please check your connection and try again.');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Submit racket';
+    renderRacketList(); // restores the "Submit N rackets" label
     if (canAnimate()) gsap.set(btn, { scale: 1 });
   }
 });
 
 $('resetBtn').addEventListener('click', () => {
   $('orderForm').reset();
-  state.providingString = '';
-  state.stringChoice = '';
-  state.tension = '';
-  state.grip = 'none';
-  state.cushion = 'none';
-  document.querySelectorAll('.chips[data-group]').forEach((group) => {
-    group.querySelectorAll('.chip').forEach((c) =>
-      c.classList.toggle('active', c.dataset.value === 'none' && (group.dataset.group === 'grip' || group.dataset.group === 'cushion')));
-  });
-  $('tensionOther').classList.add('hidden');
-  $('ownString').value = '';
-  renderStockChips();
-  updateStockNote();
+  rackets.length = 0;
+  resetRacketFields();
   updateSummary();
   $('successView').classList.add('hidden');
   $('formView').classList.remove('hidden');
